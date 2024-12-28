@@ -41,11 +41,15 @@ This repository contains the **Code Sphere** platform, which facilitates online 
 │   │   ├── /pages            # Pages and route-specific components
 │   │   └── /styles           # Global styles (CSS, SCSS, etc.)
 │   │
-│   │
+│   └── /utils                # Utility functions (validators, helpers, etc.)
+│
+├── /tests                    # Unit and integration tests
+│
 ├── /node_modules             # Node modules
 │
 ├── /package.json
 └── /tsconfig.json            # If using TypeScript
+
 ```
 
 ### Deployment:
@@ -60,7 +64,7 @@ This repository contains the **Code Sphere** platform, which facilitates online 
 
 ---
 
-## Backend: Node.js + Express.js Application
+## Backend: Node.js + Express.js Application (Clean Architecture)
 
 ### Features:
 - RESTful API for handling authentication, course management, and messaging.
@@ -85,16 +89,41 @@ This repository contains the **Code Sphere** platform, which facilitates online 
 
 ### Folder Structure:
 ```
-/src
-├── /controllers        # Request handlers for API routes
-├── /models             # Database models
-├── /routes             # Route definitions
-├── /middlewares        # Middleware for validation/authentication
-├── /utils              # Utility functions
-└── /config             # Configuration files (e.g., environment variables)
-
-.env                    # Environment variables
-package.json            # Dependencies and scripts
+/my-backend-project
+│
+├── /src
+│   ├── /domain                  # Core business logic (entities, interfaces)
+│   │   ├── /entities            # Business entities (e.g., User, Order)
+│   │   ├── /interfaces          # Repository interfaces, service contracts
+│   │   └── /valueObjects        # Value objects, like email or price
+│   │
+│   ├── /application             # Application-specific business logic
+│   │   ├── /useCases            # Use case implementations (e.g., CreateUser)
+│   │   └── /dtos                # Data Transfer Objects
+│   │
+│   ├── /infrastructure          # Framework and infrastructure code
+│   │   ├── /database            # Database configuration and ORM setup
+│   │   ├── /repositories        # Implementation of repository interfaces
+│   │   ├── /routes              # Express routes
+│   │   └── /services            # External services (e.g., email, third-party APIs)
+│   │
+│   ├── /presentation            # Web layer (controllers, middlewares)
+│   │   ├── /controllers         # API controllers
+│   │   ├── /middlewares         # Express middlewares
+│   │   └── /validators          # Request validation logic
+│   │
+│   ├── /config                  # App configuration (e.g., env variables)
+│   │   └── config.ts
+│   │
+│   └── /utils                   # Helper functions, utilities
+│
+├── /tests                       # Unit and integration tests
+├── /node_modules                # Node modules
+├── /package.json
+├── /tsconfig.json               # TypeScript configuration
+├── /eslint.json                 # Linter configuration
+├── /prettier.config.js          # Prettier configuration
+└── /dist                        # Compiled JavaScript code
 ```
 
 ### Deployment:
