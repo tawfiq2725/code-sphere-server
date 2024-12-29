@@ -2,12 +2,14 @@
 import express from "express";
 import cors from "cors";
 import { config } from "dotenv";
+import connectToDatabase from "./infrastructure/database/dbConnection";
 
-// Load environment variables
+// configs
 config();
+connectToDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.APP_PORT;
 
 const corsOptions = {
   origin: ["http://localhost:3000"],
@@ -16,16 +18,9 @@ const corsOptions = {
   credentials: true,
 };
 
-// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Routes
-app.get("/", (req: express.Request, res: express.Response): any => {
-  return res.json({ message: "Backend is running!", success: true });
-});
-
-// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
