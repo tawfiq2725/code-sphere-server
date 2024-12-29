@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { config } from "dotenv";
 import connectToDatabase from "./infrastructure/database/dbConnection";
+import authRoutes from "./infrastructure/routes/authRoutes";
 
 // configs
 config();
@@ -20,6 +21,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+
+app.use("/", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

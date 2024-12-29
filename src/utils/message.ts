@@ -1,6 +1,6 @@
 import express from "express";
 
-const showFlashMessages = ({
+const sendResponseJson = ({
   res,
   message,
   status,
@@ -8,8 +8,8 @@ const showFlashMessages = ({
 }: {
   res: express.Response;
   message: string;
-  success: boolean;
   status: number;
+  success: boolean;
 }) => {
   res.status(status).json({
     message,
@@ -17,4 +17,4 @@ const showFlashMessages = ({
   });
 };
 
-export default showFlashMessages;
+export default sendResponseJson;
