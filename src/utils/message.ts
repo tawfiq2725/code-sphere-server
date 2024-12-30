@@ -1,16 +1,11 @@
 import express from "express";
 
-const sendResponseJson = ({
-  res,
-  message,
-  status,
-  success = false,
-}: {
-  res: express.Response;
-  message: string;
-  status: number;
-  success: boolean;
-}) => {
+const sendResponseJson = (
+  res: express.Response,
+  status: number,
+  message: string,
+  success: boolean
+) => {
   res.status(status).json({
     message,
     success,

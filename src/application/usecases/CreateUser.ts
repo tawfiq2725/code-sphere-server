@@ -1,10 +1,10 @@
 import { UserInterface } from "../../domain/interface/User";
-import { User } from "../../domain/entities/User";
+import { Person } from "../../domain/entities/User";
 
 export class CreateUser {
   constructor(private userRepository: UserInterface) {}
 
-  public async execute(userData: Omit<User, "id">): Promise<User> {
+  public async execute(userData: Omit<Person, "id">): Promise<Person> {
     const { email } = userData;
 
     // Duplicates
@@ -13,8 +13,8 @@ export class CreateUser {
       throw new Error("User with this email already exists");
     }
 
-    const newUser = new User(
-      userData.student_name,
+    const newUser = new Person(
+      userData.name,
       userData.email,
       userData.password,
       userData.role

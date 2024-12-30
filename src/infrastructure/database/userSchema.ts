@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface UserDocument extends Document {
-  student_name: string;
+  name: string;
   email: string;
   password: string;
-  role: "student";
+  role: "student" | "tutor" | "admin";
   isAdmin: boolean;
   isVerified: boolean;
   googleId?: string;
@@ -12,7 +12,7 @@ export interface UserDocument extends Document {
 
 const UserSchema: Schema = new Schema(
   {
-    student_name: {
+    name: {
       type: String,
       required: true,
     },
@@ -28,7 +28,7 @@ const UserSchema: Schema = new Schema(
     role: {
       type: String,
       default: "student",
-      enum: ["student"],
+      enum: ["student", "tutor", "admin"],
     },
     isVerfied: {
       type: Boolean,

@@ -1,9 +1,8 @@
-import { User } from "../entities/User";
+import { Person } from "../entities/User";
 
 export interface UserInterface {
-  create(user: User): Promise<User>;
-  findByEmail(email: string): Promise<User | null>;
-  findById(id: string): Promise<User | null>;
-  update(id: string, user: User): Promise<User | null>;
-  delete(id: string): Promise<void>;
+  create(user: Person): Promise<Person>;
+  findByEmail(email: string): Promise<Person | null>;
+  findById(id: string): Promise<Person | null>;
+  update(id: string, user: Person): Promise<Person | null>;
 }

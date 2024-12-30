@@ -1,32 +1,43 @@
 import { UserInterface } from "../../domain/interface/User";
-import { User } from "../../domain/entities/User";
-import UserModel from "../database/userSchema";
+import { Person } from "../../domain/entities/User";
+import UserModel, { UserDocument } from "../database/userSchema";
 
 export class UserRepository implements UserInterface {
-  public async create(user: User): Promise<User> {
+  private maptoEntity(userDoc: UserDocument): Person {
+    return new Person(
+      userDoc.name,
+      userDoc.email,
+      userDoc.password,
+      userDoc.role,
+      userDoc.isVerified,
+      userDoc.isAdmin,
+      userDoc.googleId
+    );
+  }
+
+  public async create(user: Person): Promise<Person> {
     const userDoc = new UserModel(user);
     await userDoc.save();
-    return userDoc.toObject(); // returning plain object
+    return this.maptoEntity(userDoc);
   }
 
-  public async findByEmail(email: string): Promise<User | null> {
+  public async findByEmail(email: string): Promise<Person | null> {
     const userDoc = await UserModel.findOne({ email }).exec();
-    return userDoc ? userDoc.toObject() : null;
+    return userDoc ? this.maptoEntity(userDoc) : null;
   }
 
-  public async findById(id: string): Promise<User | null> {
+  public async findById(id: string): Promise<Person | null> {
     const userDoc = await UserModel.findById(id).exec();
-    return userDoc ? userDoc.toObject() : null;
+    return userDoc ? this.maptoEntity(userDoc) : null;
   }
 
-  public async update(id: string, user: User): Promise<User | null> {
+  public async update(
+    id: string,
+    user: Partial<Person>
+  ): Promise<Person | null> {
     const userDoc = await UserModel.findByIdAndUpdate(id, user, {
       new: true,
     }).exec();
-    return userDoc ? userDoc.toObject() : null;
-  }
-
-  public async delete(id: string): Promise<void> {
-    await UserModel.findByIdAndDelete(id).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
   }
 }
