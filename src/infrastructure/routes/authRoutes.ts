@@ -1,5 +1,8 @@
 import express from "express";
-import { createUser } from "../../presentation/controllers/userController";
+import {
+  createUser,
+  loginUser,
+} from "../../presentation/controllers/userController";
 import HttpStatus from "../../utils/statusCodes";
 import sendResponseJson from "../../utils/message";
 import {
@@ -15,5 +18,6 @@ router.get("/check", (req: express.Request, res: express.Response) => {
 router.post("/user", createUser);
 router.post("/send-otp", generateOtpHandler);
 router.post("/verify-otp", verifyOtpHandler);
+router.post("/login", loginUser);
 
 export default router;

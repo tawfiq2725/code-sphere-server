@@ -10,6 +10,7 @@ const sendResponseJson = (
   res.status(status).json({
     message,
     success,
+    data: _data,
   });
 };
 

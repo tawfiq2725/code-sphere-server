@@ -1,7 +1,6 @@
 import nodemailer from "nodemailer";
-import { configBrevo } from "../../config/BrevoSetup";
+import { configBrevo } from "../../config/ConfigSetup";
 
-// Create a nodemailer transport using Brevo's SMTP settings
 const transporter = nodemailer.createTransport({
   host: configBrevo.BREVO.SMTP_SERVER,
   port: configBrevo.BREVO.PORT,
@@ -12,7 +11,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Function to send OTP email
 export const sendOtpEmail = async (
   email: string,
   otp: string
@@ -28,8 +26,7 @@ export const sendOtpEmail = async (
           <h2>Hi there!</h2>
           <p>We received a request to verify your account. To complete the verification, click the button below to view your OTP.</p>
           <p>If you didn't request this, please ignore this email.</p>
-          
-          <!-- CTA Button to Reveal OTP -->
+          <br/>
           <h1>OTP : ${otp}</h1>
           
           <p style="margin-top: 20px; font-size: 12px; color: #777;">This email was sent from your account at <strong>code-sphere</strong>.</p>

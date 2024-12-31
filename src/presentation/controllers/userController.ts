@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Person } from "../../domain/entities/User";
 import { CreateUser } from "../../application/usecases/CreateUser";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository"; // Adjust path as needed
+import { LoginUser } from "../../application/usecases/loginUser";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 
@@ -17,8 +18,6 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
         false
       );
     }
-
-    // Create a Person instance
     const user = new Person(name, email, password, role);
 
     const messageRole = (Whichrole: string | undefined): string => {
@@ -42,5 +41,23 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
       error.message,
       false
     );
+  }
+};
+
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    const userRepository = new UserRepository();
+    const loginUserUseCase = new LoginUser(userRepository);
+
+    const { user, token } = await loginUserUseCase.execute(email, password);
+
+    // Set JWT as a cookie
+    res.cookie("authToken", token, { httpOnly: true, secure: true });
+    console.log(token);
+    sendResponseJson(res, HttpStatus.OK, "Login successful", true, token);
+  } catch (error: any) {
+    sendResponseJson(res, HttpStatus.UNAUTHORIZED, error.message, false);
   }
 };
