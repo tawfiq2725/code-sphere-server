@@ -3,6 +3,7 @@ import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { VerifyOtp } from "../../application/usecases/verifyOtp";
 import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
 import { sendOtpEmail } from "../../application/services/OtpService";
+import userSchema from "../../infrastructure/database/userSchema";
 
 export const generateOtpHandler = async (
   req: Request,
@@ -35,7 +36,8 @@ export const verifyOtpHandler = async (
   res: Response
 ): Promise<void> => {
   const { email, otp } = req.body;
-
+  console.log("email", email);
+  console.log("otp", otp);
   if (!email || !otp) {
     res.status(400).send({ message: "Email and OTP are required." });
     return;

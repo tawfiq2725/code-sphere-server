@@ -30,7 +30,7 @@ const UserSchema: Schema = new Schema(
       default: "student",
       enum: ["student", "tutor", "admin"],
     },
-    isVerfied: {
+    isVerified: {
       type: Boolean,
       default: false,
     },

@@ -1,5 +1,5 @@
 import { OtpRepository } from "../../domain/interface/Otp";
-
+import User from "../../infrastructure/database/userSchema";
 export class VerifyOtp {
   constructor(private otpRepository: OtpRepository) {}
 
@@ -9,6 +9,10 @@ export class VerifyOtp {
       return false;
     }
     await this.otpRepository.deleteByEmail(email);
+    // verify the user fields
+    let foundUser = await User.find({ email: email });
+    foundUser[0].isVerified = true;
+    await foundUser[0].save();
     return true;
   }
 }
