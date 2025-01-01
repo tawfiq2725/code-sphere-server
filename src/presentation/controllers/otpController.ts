@@ -3,7 +3,8 @@ import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { VerifyOtp } from "../../application/usecases/verifyOtp";
 import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
 import { sendOtpEmail } from "../../application/services/OtpService";
-import userSchema from "../../infrastructure/database/userSchema";
+import sendResponseJson from "../../utils/message";
+import HttpStatus from "../../utils/statusCodes";
 
 export const generateOtpHandler = async (
   req: Request,
@@ -12,7 +13,7 @@ export const generateOtpHandler = async (
   const { email } = req.body;
 
   if (!email) {
-    res.status(400).send({ message: "User email not found." });
+    sendResponseJson(res, HttpStatus.BAD_REQUEST, "Email is required.", false);
     return;
   }
 
@@ -22,12 +23,15 @@ export const generateOtpHandler = async (
   try {
     const otp = await generateOtpUseCase.execute(email);
     await sendOtpEmail(email, otp);
-    res.status(200).send({ message: "OTP sent successfully." });
-  } catch (error) {
+    sendResponseJson(res, HttpStatus.OK, "OTP generated successfully.", true);
+  } catch (error: any) {
     console.error("Error generating OTP", error);
-    res
-      .status(500)
-      .send({ message: "Error generating OTP, please try again later." });
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
   }
 };
 
@@ -39,7 +43,13 @@ export const verifyOtpHandler = async (
   console.log("email", email);
   console.log("otp", otp);
   if (!email || !otp) {
-    res.status(400).send({ message: "Email and OTP are required." });
+    sendResponseJson(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Email and OTP are required.",
+      false
+    );
+
     return;
   }
 
@@ -50,14 +60,22 @@ export const verifyOtpHandler = async (
     const isValid = await verifyOtpUseCase.execute(email, otp);
 
     if (isValid) {
-      res.status(200).send({ message: "OTP verified successfully." });
+      sendResponseJson(res, HttpStatus.OK, "OTP verified successfully.", true);
     } else {
-      res.status(400).send({ message: "Invalid or expired OTP." });
+      sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid or expired OTP.",
+        false
+      );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error verifying OTP", error);
-    res
-      .status(500)
-      .send({ message: "Error verifying OTP, please try again later." });
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
   }
 };
