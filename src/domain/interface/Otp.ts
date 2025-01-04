@@ -1,7 +1,7 @@
-import { Otp } from "../entities/Otp";
+import { OtpEntity } from "../entities/Otp";
 
 export interface OtpRepository {
-  create(otp: Otp): Promise<void>;
-  findByEmail(email: string): Promise<Otp | null>;
+  create(otp: OtpEntity): Promise<void>;
+  findByEmail(email: string): Promise<OtpEntity | null>;
   deleteByEmail(email: string): Promise<void>;
 }

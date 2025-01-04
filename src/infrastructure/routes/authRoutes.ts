@@ -17,6 +17,7 @@ router.get("/check", (req: express.Request, res: express.Response) => {
 });
 router.post("/user", createUser);
 router.post("/send-otp", generateOtpHandler);
+router.post("/resend-otp", generateOtpHandler);
 router.post("/verify-otp", verifyOtpHandler);
 router.post("/login", loginUser);
 

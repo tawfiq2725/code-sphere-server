@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Person } from "../../domain/entities/User";
 import { CreateUser } from "../../application/usecases/CreateUser";
-import { UserRepository } from "../../infrastructure/repositories/UserRepository"; // Adjust path as needed
+import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 import { LoginUser } from "../../application/usecases/loginUser";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
@@ -52,11 +52,17 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const loginUserUseCase = new LoginUser(userRepository);
 
     const { user, token } = await loginUserUseCase.execute(email, password);
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: false,
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    });
 
-    // Set JWT as a cookie
-    res.cookie("authToken", token, { httpOnly: true, secure: true });
     console.log(token);
-    sendResponseJson(res, HttpStatus.OK, "Login successful", true, token);
+    sendResponseJson(res, HttpStatus.OK, "Login successful", true, {
+      jwt_token: token,
+      role: user.role,
+    });
   } catch (error: any) {
     sendResponseJson(res, HttpStatus.UNAUTHORIZED, error.message, false);
   }

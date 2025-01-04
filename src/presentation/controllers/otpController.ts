@@ -35,6 +35,37 @@ export const generateOtpHandler = async (
   }
 };
 
+// resend otp controller ithu
+
+export const resendOtpHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { email } = req.body;
+
+  if (!email) {
+    sendResponseJson(res, HttpStatus.BAD_REQUEST, "Email is required", false);
+    return;
+  }
+
+  const otpRepository = new OtpRepositoryImpl();
+  const generateOtpUseCase = new GenerateOtp(otpRepository);
+
+  try {
+    const otp = await generateOtpUseCase.execute(email);
+    await sendOtpEmail(email, otp);
+    sendResponseJson(res, HttpStatus.OK, "OTP Resend successfully", true);
+  } catch (error: any) {
+    console.error("Error generating OTP", error);
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
+  }
+};
+
 export const verifyOtpHandler = async (
   req: Request,
   res: Response
