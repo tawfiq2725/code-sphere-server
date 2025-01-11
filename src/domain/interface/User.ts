@@ -5,4 +5,10 @@ export interface UserInterface {
   findByEmail(email: string): Promise<Person | null>;
   findById(id: string): Promise<Person | null>;
   update(id: string, user: Person): Promise<Person | null>;
+  getAllUsers(): Promise<Person[]>;
+  getAllTutor(): Promise<Person[]>;
+  BlockUser(id: string): Promise<Person | null>;
+  UnblockUser(id: string): Promise<Person | null>;
+  approveTutor(id: string): Promise<Person | null>;
+  disapproveTutor(id: string): Promise<Person | null>;
 }

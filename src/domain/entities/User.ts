@@ -6,9 +6,17 @@ export class Person {
     public email: string,
     public password: string,
     public role: "student" | "tutor" | "admin",
+    public _id?: string,
     public isVerified: boolean = false,
     public isAdmin: boolean = false,
-    public googleId?: string
+    public isBlocked: boolean = false,
+    public googleId?: string,
+    public isTutor: boolean = false,
+    public qualification?: string,
+    public experience?: number,
+    public subjects?: string[],
+    public certificates?: string[],
+    public profile?: string
   ) {}
 
   async hashPassword(): Promise<void> {

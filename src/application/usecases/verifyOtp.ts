@@ -9,7 +9,7 @@ export class VerifyOtp {
       return false;
     }
     await this.otpRepository.deleteByEmail(email);
-    // verify the user fields
+
     let foundUser = await User.find({ email: email });
     foundUser[0].isVerified = true;
     await foundUser[0].save();

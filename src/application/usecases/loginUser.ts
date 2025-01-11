@@ -15,6 +15,11 @@ export class LoginUser {
       throw new Error("User not found");
     }
 
+    const isBlocked = user.isBlocked;
+    if (isBlocked) {
+      throw new Error("User is blocked");
+    }
+
     const isPasswordValid = await user.verifyPassword(password);
     if (!isPasswordValid) {
       throw new Error("Invalid password");

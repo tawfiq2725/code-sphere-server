@@ -9,9 +9,17 @@ export class UserRepository implements UserInterface {
       userDoc.email,
       userDoc.password,
       userDoc.role,
+      userDoc._id,
       userDoc.isVerified,
       userDoc.isAdmin,
-      userDoc.googleId
+      userDoc.isBlocked,
+      userDoc.googleId,
+      userDoc.isTutor,
+      userDoc.qualification,
+      userDoc.experience,
+      userDoc.subjects,
+      userDoc.certificates,
+      userDoc.profile
     );
   }
 
@@ -38,6 +46,52 @@ export class UserRepository implements UserInterface {
     const userDoc = await UserModel.findByIdAndUpdate(id, user, {
       new: true,
     }).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+
+  public async getAllUsers(): Promise<any> {
+    const userDocs = await UserModel.find({ role: "student" }).exec();
+    return userDocs;
+  }
+
+  public async getAllTutor(): Promise<any> {
+    const userDocs = await UserModel.find({ role: "tutor" }).exec();
+    return userDocs;
+  }
+
+  public async BlockUser(id: string): Promise<Person | null> {
+    const userDoc = await UserModel.findByIdAndUpdate(
+      id,
+      { isBlocked: true },
+      { new: true }
+    ).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+
+  public async UnblockUser(id: string): Promise<Person | null> {
+    const userDoc = await UserModel.findByIdAndUpdate(
+      id,
+      { isBlocked: false },
+      { new: true }
+    ).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+
+  public async approveTutor(id: string): Promise<Person | null> {
+    const userDoc = await UserModel.findByIdAndUpdate(
+      id,
+      { isTutor: true },
+      { new: true }
+    ).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+
+  public async disapproveTutor(id: string): Promise<Person | null> {
+    const userDoc = await UserModel.findByIdAndUpdate(
+      id,
+      { isTutor: false },
+      { new: true }
+    ).exec();
     return userDoc ? this.maptoEntity(userDoc) : null;
   }
 }
