@@ -4,7 +4,7 @@ export interface UserDocument extends Document {
   name: string;
   email: string;
   password: string;
-  role: "student" | "tutor" | "admin";
+  role?: "student" | "tutor" | "admin";
   _id: string;
   isAdmin: boolean;
   isVerified: boolean;
@@ -31,7 +31,7 @@ const UserSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
     role: {
       type: String,

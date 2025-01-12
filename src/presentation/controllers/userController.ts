@@ -123,3 +123,49 @@ export const logout = (req: Request, res: Response) => {
   console.log("Logout successful all the datas are cleared");
   sendResponseJson(res, HttpStatus.OK, "Logout successful", true);
 };
+
+import jwt from "jsonwebtoken";
+import User from "../../infrastructure/database/userSchema"; // Adjust the import as per your structure
+import { configJwt } from "../../config/ConfigSetup";
+
+export const roleSelection = async (req: Request, res: Response) => {
+  const { role, email } = req.body;
+
+  if (!role || !email) {
+    return res.status(400).json({
+      success: false,
+      message: "Role and email are required",
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    // Create a new JWT token with the updated role
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      configJwt.jwtSecret!,
+      { expiresIn: "1h" }
+    );
+
+    sendResponseJson(res, HttpStatus.OK, "Role set successfully", true, {
+      role: user.role,
+      token,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while setting the role",
+    });
+  }
+};
