@@ -1,6 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
+serviceAccountKey.json
+codesphere-aeece-firebase-adminsdk-fbsvc-162262a234.json
 /node_modules
 /.pnp
 .pnp.*

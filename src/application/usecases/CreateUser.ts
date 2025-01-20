@@ -7,7 +7,6 @@ export class CreateUser {
   public async execute(userData: Omit<Person, "id">): Promise<Person> {
     const { email } = userData;
 
-    // Duplicates
     const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) {
       throw new Error("User with this email already exists");

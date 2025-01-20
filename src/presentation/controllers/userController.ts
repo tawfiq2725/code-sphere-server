@@ -5,9 +5,8 @@ import { UserRepository } from "../../infrastructure/repositories/UserRepository
 import { LoginUser } from "../../application/usecases/loginUser";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
-import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
-import { GenerateOtp } from "../../application/usecases/generateOtp";
-import { sendOtpEmail } from "../../application/services/OtpService";
+import { admin } from "../../firebase";
+import UserS from "../../infrastructure/database/userSchema";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -73,7 +72,50 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     sendResponseJson(res, HttpStatus.UNAUTHORIZED, error.message, false);
   }
 };
+export const generateOtpHandlerF = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  console.log("generate otp handler called");
 
+  const otpRepository = new OtpRepositoryImpl();
+  const generateOtpUseCase = new GenerateOtp(otpRepository);
+
+  try {
+    const { email } = req.body;
+    const user = await UserS.findOne({ email });
+    if (!user) {
+      sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "No user found with this email address",
+        false
+      );
+      return;
+    }
+    if (!email) {
+      sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Email address is required",
+        false
+      );
+      return;
+    }
+
+    const otp = await generateOtpUseCase.execute(email);
+    await sendOtpEmail(email, otp);
+    sendResponseJson(res, HttpStatus.OK, "OTP generated successfully.", true);
+  } catch (error: any) {
+    console.error("Error generating OTP", error);
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
+  }
+};
 export const newPassword = async (
   req: Request,
   res: Response
@@ -125,13 +167,74 @@ export const logout = (req: Request, res: Response) => {
 };
 
 import jwt from "jsonwebtoken";
-import User from "../../infrastructure/database/userSchema"; // Adjust the import as per your structure
+import User from "../../infrastructure/database/userSchema";
 import { configJwt } from "../../config/ConfigSetup";
+import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
+import { GenerateOtp } from "../../application/usecases/generateOtp";
+import { sendOtpEmail } from "../../application/services/OtpService";
 
-export const roleSelection = async (req: Request, res: Response) => {
-  const { role, email } = req.body;
+export const googleAuth = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { idToken } = req.body;
+    console.log("receiveddddddddddddddddddddddddddddddddddddddd", idToken);
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    console.log("decodeddddddddddddddddddddddddddddddddddddddd", decodedToken);
+    const { email, name, uid } = decodedToken;
 
-  if (!role || !email) {
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        googleId: uid,
+        isVerified: true,
+      });
+      await user.save();
+      console.log("User created successfully it is going to role selection");
+      return sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "User created successfully",
+        true,
+        {
+          message: "User registered. Please select a role.",
+          newUser: true,
+          userId: user._id,
+        }
+      );
+    }
+
+    let jwt_secret: any = process.env.JWT_SECRET;
+
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id, role: user.role }, jwt_secret, {
+      expiresIn: "1d",
+    });
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    });
+    console.log("cookies also set simultaneously");
+    res.setHeader("Authorization", `Bearer ${token}`);
+    return sendResponseJson(res, HttpStatus.OK, "Login successful", true, {
+      newUser: false,
+      jwt_token: token,
+      role: user.role,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Authentication failed" });
+  }
+};
+
+export const roleSelection = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { role, userId } = req.body;
+  if (!role || !userId) {
     return res.status(400).json({
       success: false,
       message: "Role and email are required",
@@ -139,7 +242,7 @@ export const roleSelection = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -150,16 +253,23 @@ export const roleSelection = async (req: Request, res: Response) => {
     user.role = role;
     await user.save();
 
-    // Create a new JWT token with the updated role
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       configJwt.jwtSecret!,
       { expiresIn: "1h" }
     );
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+    });
+    console.log("cookies also set simultaneously");
+    res.setHeader("Authorization", `Bearer ${token}`);
 
     sendResponseJson(res, HttpStatus.OK, "Role set successfully", true, {
+      jwt_token: token,
       role: user.role,
-      token,
+      email: user.email,
     });
   } catch (error) {
     console.error(error);

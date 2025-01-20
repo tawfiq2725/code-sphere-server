@@ -5,6 +5,7 @@ import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpReposito
 import { sendOtpEmail } from "../../application/services/OtpService";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
+import User from "../../infrastructure/database/userSchema";
 
 export const generateOtpHandler = async (
   req: Request,
@@ -13,7 +14,12 @@ export const generateOtpHandler = async (
   const { email } = req.body;
 
   if (!email) {
-    sendResponseJson(res, HttpStatus.BAD_REQUEST, "Email is required.", false);
+    sendResponseJson(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Give the correct email Address",
+      false
+    );
     return;
   }
 

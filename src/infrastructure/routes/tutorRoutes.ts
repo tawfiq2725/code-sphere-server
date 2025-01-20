@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  getTutorCertificates,
   getTutorProfile,
   updateProfile,
 } from "../../presentation/controllers/tutorCtrl";

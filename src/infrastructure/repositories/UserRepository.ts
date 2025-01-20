@@ -8,7 +8,7 @@ export class UserRepository implements UserInterface {
       userDoc.name,
       userDoc.email,
       userDoc.password,
-      userDoc.role,
+      userDoc.role ?? "student",
       userDoc._id,
       userDoc.isVerified,
       userDoc.isAdmin,

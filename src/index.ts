@@ -1,14 +1,13 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import "./firebase";
 const app = express();
 import { config } from "dotenv";
 import connectToDatabase from "./infrastructure/database/dbConnection";
 import authRoutes from "./infrastructure/routes/authRoutes";
 import adminRoutes from "./infrastructure/routes/adminRoutes";
 import tutorRoutes from "./infrastructure/routes/tutorRoutes";
-import passport from "passport";
-import "./config/googleAuth";
 config();
 connectToDatabase();
 const PORT = process.env.APP_PORT;
@@ -24,7 +23,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
 
 app.use("/admin", adminRoutes);
 app.use("/tutor", tutorRoutes);
