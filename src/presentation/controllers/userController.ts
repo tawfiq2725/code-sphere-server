@@ -72,6 +72,36 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     sendResponseJson(res, HttpStatus.UNAUTHORIZED, error.message, false);
   }
 };
+export const getProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const email = req.query.email as string;
+    console.log(email, "checking");
+    const userRepository = new UserRepository();
+    const user = await userRepository.findByEmail(email);
+    console.log(user, "checkingggggggggggggggggggggggggg");
+    if (!user) {
+      sendResponseJson(res, HttpStatus.NOT_FOUND, "User not found", false);
+      return;
+    }
+    sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "User data fetches successfully",
+      true,
+      user
+    );
+  } catch (error: any) {
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
+  }
+};
 export const generateOtpHandlerF = async (
   req: Request,
   res: Response
@@ -176,22 +206,43 @@ import { sendOtpEmail } from "../../application/services/OtpService";
 export const googleAuth = async (req: Request, res: Response): Promise<any> => {
   try {
     const { idToken } = req.body;
-    console.log("receiveddddddddddddddddddddddddddddddddddddddd", idToken);
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    console.log("decodeddddddddddddddddddddddddddddddddddddddd", decodedToken);
-    const { email, name, uid } = decodedToken;
+    console.log("Received ID Token:", idToken);
 
+    // Verify ID Token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    console.log("Decoded Token:", decodedToken);
+
+    const { email, name, uid, picture } = decodedToken;
+
+    // Check if the user exists
     let user = await User.findOne({ email });
 
+    // If user doesn't exist, create a new user
     if (!user) {
-      user = new User({
+      const userData: {
+        name: string;
+        email: string | undefined;
+        googleId: string;
+        isVerified: boolean;
+        profile?: string;
+      } = {
         name,
         email,
         googleId: uid,
         isVerified: true,
-      });
+      };
+
+      // Add profile picture if it exists
+      if (picture) {
+        userData.profile = picture;
+      }
+
+      user = new User(userData);
       await user.save();
-      console.log("User created successfully it is going to role selection");
+
+      console.log("User created successfully. Proceeding to role selection.");
+
+      // Respond with role selection for new user
       return sendResponseJson(
         res,
         HttpStatus.OK,
@@ -201,31 +252,40 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
           message: "User registered. Please select a role.",
           newUser: true,
           userId: user._id,
+          email: user.email,
         }
       );
     }
 
-    let jwt_secret: any = process.env.JWT_SECRET;
+    // User exists; proceed with login
+    const jwt_secret: any = process.env.JWT_SECRET;
 
     // Generate JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, jwt_secret, {
       expiresIn: "1d",
     });
+
+    // Set cookies
     res.cookie("authToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day
     });
-    console.log("cookies also set simultaneously");
+
+    console.log("Cookies set successfully.");
     res.setHeader("Authorization", `Bearer ${token}`);
+    console.log("------------------- email", user.email);
+    // Respond with login success
     return sendResponseJson(res, HttpStatus.OK, "Login successful", true, {
       newUser: false,
       jwt_token: token,
       role: user.role,
+      email: user.email,
+      user,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Authentication failed" });
+    return res.status(500).json({ message: "Authentication failed" });
   }
 };
 

@@ -2,6 +2,7 @@ import express from "express";
 import {
   createUser,
   generateOtpHandlerF,
+  getProfile,
   googleAuth,
   loginUser,
   logout,
@@ -14,7 +15,6 @@ import {
   generateOtpHandler,
   verifyOtpHandler,
 } from "../../presentation/controllers/otpController";
-import passport from "passport";
 
 const router = express.Router();
 
@@ -30,7 +30,7 @@ router.post("/forgot-password", generateOtpHandlerF);
 router.post("/verify-forgot-password", verifyOtpHandler);
 router.post("/new-password", newPassword);
 router.get("/logout", logout);
-
+router.get("/get-profile", getProfile);
 // Google Auth
 router.post("/api/auth/google", googleAuth);
 router.post("/auth/set-role", roleSelection);

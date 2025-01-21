@@ -5,14 +5,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from "crypto";
-import ffmpeg from "fluent-ffmpeg";
-import stream from "stream";
-import { AsyncLocalStorage } from "async_hooks";
-
-const ALLOWED_REFERER = process.env.BASE_URL || "";
-
-// Create a new instance of AsyncLocalStorage
-const asyncLocalStorage = new AsyncLocalStorage<{ referer: string }>();
 
 export class AwsConfig {
   private bucketName: string;
@@ -60,6 +52,9 @@ export class AwsConfig {
     file: Express.Multer.File
   ): Promise<string> {
     try {
+      console.log(
+        "Uploading file to S3------------------------------------------------"
+      );
       const uniqueName = crypto.randomBytes(16).toString("hex");
       const params = {
         Bucket: this.bucketName,

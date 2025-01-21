@@ -11,4 +11,5 @@ export interface UserInterface {
   UnblockUser(id: string): Promise<Person | null>;
   approveTutor(id: string): Promise<Person | null>;
   disapproveTutor(id: string): Promise<Person | null>;
+  getProfile(id: string): Promise<Person | null>;
 }

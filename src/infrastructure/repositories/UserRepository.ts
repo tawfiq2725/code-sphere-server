@@ -94,4 +94,12 @@ export class UserRepository implements UserInterface {
     ).exec();
     return userDoc ? this.maptoEntity(userDoc) : null;
   }
+  public async getProfile(id: string): Promise<Person | null> {
+    const userDoc = await UserModel.findById(id).exec();
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+  public async findUserIdByEmail(email: string): Promise<string | null> {
+    const userDoc = await UserModel.findOne({ email }).select("_id").exec();
+    return userDoc ? userDoc._id : null;
+  }
 }
