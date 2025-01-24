@@ -62,10 +62,11 @@ export class AwsConfig {
         Body: file.buffer,
         ContentType: file.mimetype,
       };
+      console.log("Almost ok here.............");
 
       const command = new PutObjectCommand(params);
       const sent = await this.s3client.send(command);
-
+      console.log("Sent to S3:", sent);
       if (sent && sent.$metadata.httpStatusCode === 200) {
         return `${folderPath}${uniqueName}.${file.mimetype.split("/")[1]}`;
       } else {

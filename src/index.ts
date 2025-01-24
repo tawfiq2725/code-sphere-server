@@ -8,6 +8,8 @@ import connectToDatabase from "./infrastructure/database/dbConnection";
 import authRoutes from "./infrastructure/routes/authRoutes";
 import adminRoutes from "./infrastructure/routes/adminRoutes";
 import tutorRoutes from "./infrastructure/routes/tutorRoutes";
+import courseRoutes from "./infrastructure/routes/courseRoutes";
+
 config();
 connectToDatabase();
 const PORT = process.env.APP_PORT;
@@ -24,6 +26,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api/course", courseRoutes);
 app.use("/admin", adminRoutes);
 app.use("/tutor", tutorRoutes);
 app.use("/", authRoutes);

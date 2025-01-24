@@ -21,6 +21,7 @@ export const authenticate = (
   try {
     const decoded = jwt.verify(token, configJwt.jwtSecret!) as JwtPayloadCustom;
     req.user = decoded;
+
     next();
   } catch (err) {
     res.clearCookie("authToken");

@@ -42,4 +42,25 @@ export class FileUploadService {
     }
     return uploadedCertificates;
   }
+
+  async uploadCourseThumbnail(
+    courseId: string,
+    thumbnail: Express.Multer.File
+  ): Promise<string | undefined> {
+    console.log("Uploading course thumbnail");
+    const thumbnailKey = `course/thumbnail/${courseId}/`;
+    console.log("Thumbnail key:", thumbnailKey);
+    const uploadedKey = await this.awsConfig.uploadFileToS3(
+      thumbnailKey,
+      thumbnail
+    );
+    console.log("Uploaded key:", uploadedKey);
+    const thumbnailUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      thumbnailKey
+    );
+    console.log("Thumbnail URL:", thumbnailUrl);
+
+    return thumbnailUrl?.split("?")[0];
+  }
 }

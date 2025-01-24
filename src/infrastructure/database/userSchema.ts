@@ -16,6 +16,7 @@ export interface UserDocument extends Document {
   subjects?: string[];
   certificates?: string[];
   profile?: string;
+  tutorStatus?: "pending" | "approved" | "rejected";
 }
 
 const UserSchema: Schema = new Schema(
@@ -76,6 +77,11 @@ const UserSchema: Schema = new Schema(
     },
     profile: {
       type: String,
+      required: false,
+    },
+    tutorStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
       required: false,
     },
   },

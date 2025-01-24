@@ -5,7 +5,6 @@ import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpReposito
 import { sendOtpEmail } from "../../application/services/OtpService";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
-import User from "../../infrastructure/database/userSchema";
 
 export const generateOtpHandler = async (
   req: Request,
