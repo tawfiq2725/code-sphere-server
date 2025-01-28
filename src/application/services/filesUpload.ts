@@ -38,7 +38,7 @@ export class FileUploadService {
         uploadedKey.split("/").pop()!,
         certKey
       );
-      uploadedCertificates.push(certUrl.split("?")[0]); // Push the static URL
+      uploadedCertificates.push(certUrl.split("?")[0]);
     }
     return uploadedCertificates;
   }
@@ -62,5 +62,18 @@ export class FileUploadService {
     console.log("Thumbnail URL:", thumbnailUrl);
 
     return thumbnailUrl?.split("?")[0];
+  }
+
+  async uploadCourseVideo(
+    courseId: string,
+    video: Express.Multer.File
+  ): Promise<string | undefined> {
+    const videoKey = `course/video/${courseId}/`;
+    const uploadedKey = await this.awsConfig.uploadFileToS3(videoKey, video);
+    const videoUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      videoKey
+    );
+    return videoUrl?.split("?")[0];
   }
 }

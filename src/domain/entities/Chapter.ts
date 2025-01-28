@@ -1,9 +1,9 @@
 export class Chapter {
   constructor(
-    public chapterId: number,
+    public courseId: string,
     public chapterName: string,
     public chapterDescription: string,
     public video: string,
-    public courseId: number
+    public status: boolean
   ) {}
 }

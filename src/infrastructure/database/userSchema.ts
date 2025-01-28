@@ -6,8 +6,8 @@ export interface UserDocument extends Document {
   password: string;
   role?: "student" | "tutor" | "admin";
   _id: string;
-  isAdmin: boolean;
   isVerified: boolean;
+  isAdmin: boolean;
   isBlocked: boolean;
   googleId?: string;
   isTutor: boolean;
@@ -15,8 +15,9 @@ export interface UserDocument extends Document {
   experience?: number;
   subjects?: string[];
   certificates?: string[];
-  profile?: string;
   tutorStatus?: "pending" | "approved" | "rejected";
+  profile?: string;
+  bio?: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -75,13 +76,18 @@ const UserSchema: Schema = new Schema(
       type: [String],
       required: false,
     },
+    tutorStatus: {
+      type: String,
+      default: "pending",
+      enum: ["pending", "approved", "rejected"],
+      required: false,
+    },
     profile: {
       type: String,
       required: false,
     },
-    tutorStatus: {
+    bio: {
       type: String,
-      enum: ["pending", "approved", "rejected"],
       required: false,
     },
   },

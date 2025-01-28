@@ -19,8 +19,14 @@ export const CourseCreate = async (
 ): Promise<any> => {
   console.log("entering the course create controller");
   try {
-    const { courseName, courseDescription, price, prerequisites, tutorId } =
-      req.body;
+    const {
+      courseName,
+      courseDescription,
+      info,
+      price,
+      prerequisites,
+      tutorId,
+    } = req.body;
     const repository = new CourseRepositoryImpl();
     const existingCourse = await repository.findCourseByName(courseName);
     if (existingCourse) {
@@ -70,6 +76,7 @@ export const CourseCreate = async (
       courseId,
       courseName,
       courseDescription,
+      info,
       price: numericPrice,
       prerequisites,
       thumbnail: thumbnailUrl,
@@ -113,6 +120,53 @@ export const GetallCourses = async (
       true,
       courses
     );
+  } catch (error: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      "Server error",
+      false
+    );
+  }
+};
+export const GetallCourse = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const CourseRepository = new CourseRepositoryImpl();
+    const courses = await CourseRepository.getAllCourses();
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Courses fetched",
+      true,
+      courses
+    );
+  } catch (error: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      "Server error",
+      false
+    );
+  }
+};
+
+export const GetcourseByGenerateId = async (req: Request, res: Response) => {
+  try {
+    const { courseId } = req.params;
+    const repository = new CourseRepositoryImpl();
+    const course = await repository.findCourseByGenerateId(courseId);
+    if (!course) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Course not found",
+        false
+      );
+    }
+    return sendResponseJson(res, HttpStatus.OK, "Course fetched", true, course);
   } catch (error: any) {
     return sendResponseJson(
       res,

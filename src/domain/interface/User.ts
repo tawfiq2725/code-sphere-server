@@ -7,6 +7,7 @@ export interface UserInterface {
   update(id: string, user: Person): Promise<Person | null>;
   getAllUsers(): Promise<Person[]>;
   getAllTutor(): Promise<Person[]>;
+  getAllTutorApplication(): Promise<Person[]>;
   BlockUser(id: string): Promise<Person | null>;
   UnblockUser(id: string): Promise<Person | null>;
   approveTutor(id: string): Promise<Person | null>;

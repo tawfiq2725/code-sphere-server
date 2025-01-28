@@ -12,6 +12,7 @@ export class CreateCourse {
       courseData.courseId,
       courseData.courseName,
       courseData.courseDescription,
+      courseData.info,
       courseData.price,
       courseData.prerequisites,
       courseData.thumbnail,

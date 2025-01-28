@@ -4,6 +4,7 @@ interface ICourse extends Document {
   courseId: string;
   courseName: string;
   courseDescription: string;
+  info: string;
   price: number;
   prerequisites: string;
   thumbnail: string;
@@ -24,6 +25,11 @@ const courseSchema = new Schema<ICourse>(
       trim: true,
     },
     courseDescription: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    info: {
       type: String,
       required: true,
       trim: true,

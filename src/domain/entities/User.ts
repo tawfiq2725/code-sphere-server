@@ -16,7 +16,9 @@ export class Person {
     public experience?: number,
     public subjects?: string[],
     public certificates?: string[],
-    public profile?: string
+    public tutorStatus?: "pending" | "approved" | "rejected",
+    public profile?: string,
+    public bio?: string
   ) {}
 
   async hashPassword(): Promise<void> {

@@ -11,8 +11,7 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, email, qualification, subjects, experience } = req.body;
-
+    const updatesData = req.body;
     const files = req.files as {
       [fieldname: string]: Express.Multer.File[];
     };
@@ -23,11 +22,7 @@ export const updateProfile = async (
     const updateProfileService = new UpdateProfileService();
 
     const updatedUser = await updateProfileService.updateProfile({
-      name,
-      email,
-      qualification,
-      subjects,
-      experience,
+      updatesData,
       files: { profilePhoto, certificates },
     });
 

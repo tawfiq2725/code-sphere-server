@@ -4,6 +4,7 @@ export class Course {
     public courseId: string,
     public courseName: string,
     public courseDescription: string,
+    public info: string,
     public price: number,
     public prerequisites: string,
     public thumbnail: string,

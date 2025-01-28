@@ -4,6 +4,7 @@ import {
   BlockUser,
   disapproveTutor,
   getAllTutorList,
+  getAllTutorListApplication,
   getAllUsersList,
   UnblockUser,
 } from "../../presentation/controllers/getAllusers";
@@ -15,7 +16,12 @@ router.get("/get-users", authenticate, getAllUsersList);
 router.patch("/block-user/:id", authenticate, BlockUser);
 router.patch("/unblock-user/:id", authenticate, UnblockUser);
 router.get("/get-tutors", authenticate, getAllTutorList);
-router.patch("/approve-tutor/:id", authenticate, approveTutor);
-router.patch("/disapprove-tutor/:id", authenticate, disapproveTutor);
+router.get(
+  "/get-tutors/applications",
+  authenticate,
+  getAllTutorListApplication
+);
+router.patch("/approve-tutor/:tutorId", authenticate, approveTutor);
+router.patch("/disapprove-tutor/:tutorId", authenticate, disapproveTutor);
 router.get("/tutor/certificates/:id", authenticate, getTutorCertificates);
 export default router;

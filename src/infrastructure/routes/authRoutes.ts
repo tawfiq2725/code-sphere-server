@@ -1,8 +1,10 @@
 import express from "express";
 import {
+  changePassword,
   createUser,
   generateOtpHandlerF,
   getProfile,
+  getUserById,
   googleAuth,
   loginUser,
   logout,
@@ -34,5 +36,6 @@ router.get("/get-profile", getProfile);
 // Google Auth
 router.post("/api/auth/google", googleAuth);
 router.post("/auth/set-role", roleSelection);
-
+router.get("/api/user/find-user/:id", getUserById);
+router.post("/api/user/change-password", changePassword);
 export default router;

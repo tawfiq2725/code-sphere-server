@@ -1,10 +1,8 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from "crypto";
+import { Readable } from "stream";
 
 export class AwsConfig {
   private bucketName: string;
@@ -52,26 +50,27 @@ export class AwsConfig {
     file: Express.Multer.File
   ): Promise<string> {
     try {
-      console.log(
-        "Uploading file to S3------------------------------------------------"
-      );
-      const uniqueName = crypto.randomBytes(16).toString("hex");
-      const params = {
-        Bucket: this.bucketName,
-        Key: `${folderPath}${uniqueName}.${file.mimetype.split("/")[1]}`,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      };
-      console.log("Almost ok here.............");
+      console.log("Uploading file to S3 using @aws-sdk/lib-storage...");
 
-      const command = new PutObjectCommand(params);
-      const sent = await this.s3client.send(command);
-      console.log("Sent to S3:", sent);
-      if (sent && sent.$metadata.httpStatusCode === 200) {
-        return `${folderPath}${uniqueName}.${file.mimetype.split("/")[1]}`;
-      } else {
-        throw new Error("File upload to S3 failed");
-      }
+      const uniqueName = crypto.randomBytes(16).toString("hex");
+      const fileExtension = file.mimetype.split("/")[1];
+      const fileName = `${folderPath}${uniqueName}.${fileExtension}`;
+
+      const fileStream = Readable.from(file.buffer);
+      const upload = new Upload({
+        client: this.s3client,
+        params: {
+          Bucket: this.bucketName,
+          Key: fileName,
+          Body: fileStream,
+          ContentType: file.mimetype,
+        },
+      });
+
+      const result = await upload.done();
+      console.log("File successfully uploaded to S3:", result);
+
+      return fileName;
     } catch (error: any) {
       console.error("Error uploading file to S3:", error.message);
       throw new Error("File upload failed");

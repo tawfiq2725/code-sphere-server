@@ -7,6 +7,7 @@ import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { admin } from "../../firebase";
 import UserS from "../../infrastructure/database/userSchema";
+import bcrypt from "bcryptjs";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -208,16 +209,12 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
     const { idToken } = req.body;
     console.log("Received ID Token:", idToken);
 
-    // Verify ID Token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     console.log("Decoded Token:", decodedToken);
 
     const { email, name, uid, picture } = decodedToken;
-
-    // Check if the user exists
     let user = await User.findOne({ email });
 
-    // If user doesn't exist, create a new user
     if (!user) {
       const userData: {
         name: string;
@@ -232,7 +229,6 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
         isVerified: true,
       };
 
-      // Add profile picture if it exists
       if (picture) {
         userData.profile = picture;
       }
@@ -242,7 +238,6 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
 
       console.log("User created successfully. Proceeding to role selection.");
 
-      // Respond with role selection for new user
       return sendResponseJson(
         res,
         HttpStatus.OK,
@@ -257,19 +252,16 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
       );
     }
 
-    // User exists; proceed with login
     const jwt_secret: any = process.env.JWT_SECRET;
 
-    // Generate JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, jwt_secret, {
       expiresIn: "1d",
     });
 
-    // Set cookies
     res.cookie("authToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 1 day
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
     });
 
     console.log("Cookies set successfully.");
@@ -337,5 +329,81 @@ export const roleSelection = async (
       success: false,
       message: "An error occurred while setting the role",
     });
+  }
+};
+
+export const getUserById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  console.log("find user by id called");
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const repositories = new UserRepository();
+    const user = await repositories.findById(id);
+    console.log(user);
+    console.log("user found");
+    if (!user) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "User not found",
+        false
+      );
+    }
+    console.log(user);
+    return sendResponseJson(res, HttpStatus.OK, "User found", true, user);
+  } catch (error: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
+  }
+};
+
+export const changePassword = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { oldPassword, newPassword, userId } = req.body;
+    const userRepository = new UserRepository();
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "User not found",
+        false
+      );
+    }
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Old password does not match",
+        false
+      );
+    }
+    user.password = newPassword;
+    await user.hashPassword();
+    await userRepository.update(userId, user);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Password changed successfully",
+      true
+    );
+  } catch (error: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
   }
 };

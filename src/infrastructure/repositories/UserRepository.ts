@@ -19,7 +19,9 @@ export class UserRepository implements UserInterface {
       userDoc.experience,
       userDoc.subjects,
       userDoc.certificates,
-      userDoc.profile
+      userDoc.tutorStatus,
+      userDoc.profile,
+      userDoc.bio
     );
   }
 
@@ -55,7 +57,17 @@ export class UserRepository implements UserInterface {
   }
 
   public async getAllTutor(): Promise<any> {
-    const userDocs = await UserModel.find({ role: "tutor" }).exec();
+    const userDocs = await UserModel.find({
+      role: "tutor",
+      isTutor: true,
+    }).exec();
+    return userDocs;
+  }
+  public async getAllTutorApplication(): Promise<any> {
+    const userDocs = await UserModel.find({
+      role: "tutor",
+      isTutor: false,
+    }).exec();
     return userDocs;
   }
 
@@ -101,5 +113,9 @@ export class UserRepository implements UserInterface {
   public async findUserIdByEmail(email: string): Promise<string | null> {
     const userDoc = await UserModel.findOne({ email }).select("_id").exec();
     return userDoc ? userDoc._id : null;
+  }
+  public async getUserProfileImage(id: string): Promise<any> {
+    const userDoc = await UserModel.findById(id).select("profile").exec();
+    return userDoc ? userDoc.profile : null;
   }
 }

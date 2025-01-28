@@ -11,8 +11,8 @@ const multerFields = [
 ];
 
 router.get("/profile", authenticate, getProfile);
-router.put(
-  "/profile/:id",
+router.patch(
+  "/profile",
   authenticate,
   upload.fields(multerFields),
   updateProfile
