@@ -16,7 +16,7 @@ export const updateProfile = async (
       [fieldname: string]: Express.Multer.File[];
     };
 
-    const profilePhoto = files?.profilePhoto?.[0];
+    const profilePhoto = files?.profileImage?.[0];
     const certificates = files?.certificates || [];
 
     const updateProfileService = new UpdateProfileService();

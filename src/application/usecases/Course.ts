@@ -18,7 +18,8 @@ export class CreateCourse {
       courseData.thumbnail,
       courseData.isVisible,
       courseData.tutorId,
-      courseData.courseStatus
+      courseData.courseStatus,
+      courseData.categoryName
     );
     console.log("Creating course.......4");
     return this.courseRepository.create(newCourse);

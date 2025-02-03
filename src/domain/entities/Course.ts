@@ -10,6 +10,7 @@ export class Course {
     public thumbnail: string,
     public isVisible: boolean,
     public tutorId: string,
-    public courseStatus: "pending" | "approved" | "rejected"
+    public courseStatus: "pending" | "approved" | "rejected",
+    public categoryName: string
   ) {}
 }

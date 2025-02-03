@@ -5,12 +5,11 @@ import { getProfile } from "../../presentation/controllers/userController";
 import { upload } from "../../config/multerConfig";
 const router = express.Router();
 
+router.get("/profile", authenticate, getProfile);
 const multerFields = [
-  { name: "profilePhoto", maxCount: 1 },
+  { name: "profileImage", maxCount: 1 },
   { name: "certificates", maxCount: 10 },
 ];
-
-router.get("/profile", authenticate, getProfile);
 router.patch(
   "/profile",
   authenticate,

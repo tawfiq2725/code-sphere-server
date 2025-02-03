@@ -11,6 +11,7 @@ interface ICourse extends Document {
   isVisible: boolean;
   tutorId: string;
   courseStatus: "pending" | "approved" | "rejected";
+  categoryName: string;
 }
 
 const courseSchema = new Schema<ICourse>(
@@ -58,6 +59,10 @@ const courseSchema = new Schema<ICourse>(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
+    },
+    categoryName: {
+      type: String,
+      required: false,
     },
   },
   {

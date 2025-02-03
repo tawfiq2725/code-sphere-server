@@ -3,6 +3,8 @@ import { Course } from "../../domain/entities/Course";
 import CourseS from "../database/courseSchema";
 export class CourseRepositoryImpl implements CourseInterface {
   public async create(course: Course): Promise<any> {
+    console.log("creating course", course);
+    console.log("creating course", course);
     return await CourseS.create(course);
   }
   public async findCourseById(id: string): Promise<Course | null> {
@@ -19,11 +21,17 @@ export class CourseRepositoryImpl implements CourseInterface {
     return await CourseS.findOne({ name });
   }
   public async getAllCourses(): Promise<Course[]> {
+    return await CourseS.find({ isVisible: true, courseStatus: "approved" });
+  }
+  public async getAllCoursesAdmin(): Promise<Course[]> {
     return await CourseS.find();
+  }
+  public async getAllCoursesId(id: string): Promise<Course[]> {
+    return await CourseS.find({ tutorId: id });
   }
   public async updateCourse(
     id: string,
-    course: Course
+    course: Partial<Course>
   ): Promise<Course | null> {
     console.log("updating course", id);
     return await CourseS.findOneAndUpdate({ courseId: id }, course, {

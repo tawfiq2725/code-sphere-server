@@ -21,6 +21,7 @@ export const CourseCreate = async (
   try {
     const {
       courseName,
+      categoryName,
       courseDescription,
       info,
       price,
@@ -83,8 +84,9 @@ export const CourseCreate = async (
       isVisible: true,
       tutorId,
       courseStatus: "pending" as "pending",
+      categoryName,
     };
-    console.log("course data seted");
+    console.log("course data seted", courseData);
     // inga courseData ah repository ku send panndra
     const CourseRepository = new CourseRepositoryImpl();
     const newCourse = new CreateCourse(CourseRepository);
@@ -111,8 +113,9 @@ export const GetallCourses = async (
   res: Response
 ): Promise<any> => {
   try {
+    const { id } = req.params;
     const CourseRepository = new CourseRepositoryImpl();
-    const courses = await CourseRepository.getAllCourses();
+    const courses = await CourseRepository.getAllCoursesId(id);
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -129,6 +132,7 @@ export const GetallCourses = async (
     );
   }
 };
+
 export const GetallCourse = async (
   req: Request,
   res: Response
@@ -267,11 +271,12 @@ export const toggleVisiblity = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { courseId } = req.params;
+    const { id } = req.params;
+
     const repository = new CourseRepositoryImpl();
 
     const toggleVisibilityUseCase = new ToggleCourseVisibility(repository);
-    const updatedCourse = await toggleVisibilityUseCase.execute(courseId);
+    const updatedCourse = await toggleVisibilityUseCase.execute(id);
 
     const message = updatedCourse.isVisible
       ? "Course is now listed"

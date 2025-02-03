@@ -5,9 +5,9 @@ import {
   GetallCourses,
   EditCourse,
   deleteCourse,
-  toggleVisiblity,
   GetallCourse,
   GetcourseByGenerateId,
+  toggleVisiblity,
 } from "../../presentation/controllers/courseCtrl";
 import { upload } from "../../config/multerConfig";
 import {
@@ -15,6 +15,13 @@ import {
   getChapter,
   updateChapter,
 } from "../../presentation/controllers/chapterCtrl";
+import {
+  addCategory,
+  getAllCategory,
+  updateCategory,
+  toggleVisiblityCategory,
+  getCategory,
+} from "../../presentation/controllers/categoryCtrl";
 const router = express.Router();
 
 router.post(
@@ -23,7 +30,8 @@ router.post(
   upload.single("thumbnail"),
   CourseCreate
 );
-router.get("/get-courses", authenticate, GetallCourses);
+router.get("/get-courses/:id", authenticate, GetallCourses);
+
 router.get("/get-course-data", GetallCourse);
 router.get("/get-course/:courseId", GetcourseByGenerateId);
 router.patch(
@@ -44,4 +52,20 @@ router.patch(
   authenticate,
   updateChapter
 );
+
+// Not auth
+router.get("/get-chapter-front/:courseId", getChapter);
+
+// Categories
+router.post("/add-category", authenticate, addCategory);
+router.get("/get-categories", authenticate, getAllCategory);
+router.patch("/update-category/:id", authenticate, updateCategory);
+router.patch(
+  "/chapter/toggle-visibility/:id",
+  authenticate,
+  toggleVisiblityCategory
+);
+// not auth
+router.get("/get-category/:id", getCategory);
+router.get("/get-category-all", getAllCategory);
 export default router;
