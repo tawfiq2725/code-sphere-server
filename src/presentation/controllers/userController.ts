@@ -203,6 +203,7 @@ import { configJwt } from "../../config/ConfigSetup";
 import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
 import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { sendOtpEmail } from "../../application/services/OtpService";
+import { FileUploadService } from "../../application/services/filesUpload";
 
 export const googleAuth = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -252,7 +253,7 @@ export const googleAuth = async (req: Request, res: Response): Promise<any> => {
       );
     }
 
-    const jwt_secret: any = process.env.JWT_SECRET;
+    const jwt_secret: any = configJwt.jwtSecret;
 
     const token = jwt.sign({ id: user._id, role: user.role }, jwt_secret, {
       expiresIn: "1d",
@@ -403,6 +404,56 @@ export const changePassword = async (
       res,
       HttpStatus.INTERNAL_SERVER_ERROR,
       error.message,
+      false
+    );
+  }
+};
+
+export const updateUserProfileImage = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const uploadservice = new FileUploadService();
+    const { userId } = req.body;
+    const profileImage = req.file;
+    const userRepository = new UserRepository();
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "User not found",
+        false
+      );
+    }
+    if (!profileImage) {
+      return sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Profile image is required",
+        false
+      );
+    }
+    const imageUrl = await uploadservice.uploadUserProfileImage(
+      userId,
+      profileImage
+    );
+    user.profile = imageUrl;
+    console.log(user);
+    await userRepository.update(userId, user);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Profile image updated successfully",
+      true,
+      user
+    );
+  } catch (e: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      e.message,
       false
     );
   }

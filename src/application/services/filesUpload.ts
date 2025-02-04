@@ -76,4 +76,17 @@ export class FileUploadService {
     );
     return videoUrl?.split("?")[0];
   }
+
+  async uploadUserProfileImage(
+    userId: string,
+    image: Express.Multer.File
+  ): Promise<string | undefined> {
+    const imageKey = `user/profile/${userId}/`;
+    const uploadedKey = await this.awsConfig.uploadFileToS3(imageKey, image);
+    const imageUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      imageKey
+    );
+    return imageUrl?.split("?")[0];
+  }
 }
