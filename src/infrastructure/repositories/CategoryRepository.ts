@@ -13,14 +13,10 @@ export class CategoryRepository implements CategoryInterface {
   public async getAllCategory(): Promise<any> {
     return await CategoryS.find();
   }
-  public async updateCategory(id: string, categoryName: any): Promise<any> {
-    return await CategoryS.findByIdAndUpdate(
-      id,
-      { categoryName },
-      {
-        new: true,
-      }
-    );
+  public async updateCategory(id: string, updates: any): Promise<any> {
+    return await CategoryS.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
   }
 
   public async toggleVisibility(id: string): Promise<any> {

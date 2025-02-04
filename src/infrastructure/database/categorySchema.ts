@@ -2,12 +2,17 @@ import { Schema, model } from "mongoose";
 
 interface ICategory extends Document {
   categoryName: string;
+  description: string;
   status: boolean;
 }
 
 const categorySchema = new Schema<ICategory>(
   {
     categoryName: {
+      type: String,
+      required: true,
+    },
+    description: {
       type: String,
       required: true,
     },

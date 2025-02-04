@@ -18,7 +18,6 @@ export class UpdateProfileService {
     };
   }): Promise<any> {
     const { updatesData, files } = data;
-
     const { email } = updatesData;
 
     if (!email) {
@@ -30,7 +29,7 @@ export class UpdateProfileService {
       throw new Error(`User not found for email: ${email}`);
     }
 
-    let profilePictureUrl;
+    let profilePictureUrl: string | undefined;
     if (files.profilePhoto) {
       profilePictureUrl = await this.fileUploadService.uploadProfilePhoto(
         userId,
@@ -38,19 +37,33 @@ export class UpdateProfileService {
       );
     }
 
-    const uploadedCertificates = files.certificates
-      ? await this.fileUploadService.uploadCertificates(
-          userId,
-          files.certificates
-        )
-      : undefined;
+    let uploadedCertificates: string[] | undefined;
+    if (files.certificates && files.certificates.length > 0) {
+      uploadedCertificates = await this.fileUploadService.uploadCertificates(
+        userId,
+        files.certificates
+      );
+    }
 
-    const updateFields: any = {
-      ...updatesData,
-      ...(profilePictureUrl && { profile: profilePictureUrl }),
-      ...(uploadedCertificates && { certificates: uploadedCertificates }),
-    };
+    const updateFields: any = {};
 
+    Object.keys(updatesData).forEach((key) => {
+      if (["certificates", "profile"].includes(key)) {
+        return;
+      }
+      const value = updatesData[key];
+      if (value !== undefined && value !== null && value !== "") {
+        updateFields[key] = value;
+      }
+    });
+
+    if (profilePictureUrl) {
+      updateFields.profile = profilePictureUrl;
+    }
+
+    if (uploadedCertificates && uploadedCertificates.length > 0) {
+      updateFields.certificates = uploadedCertificates;
+    }
     return await this.userRepository.update(userId, updateFields);
   }
 }

@@ -4,12 +4,13 @@ import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 interface Category {
   categoryName: string;
+  description: string;
   status: boolean;
 }
 
 export const addCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryName } = req.body;
+    const { categoryName, description } = req.body;
     const repository = new CategoryRepository();
     let check = await repository.checkDuplicateCategory(categoryName);
     if (check) {
@@ -22,6 +23,7 @@ export const addCategory = async (req: Request, res: Response) => {
     }
     const category: Category = {
       categoryName,
+      description,
       status: true,
     };
     await repository.create(category);
@@ -71,19 +73,12 @@ export const getCategory = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { categoryName } = req.body;
+    const updates = req.body;
     const { id } = req.params;
     const repository = new CategoryRepository();
-    let check = await repository.checkDuplicateCategory(categoryName);
-    if (check) {
-      return sendResponseJson(
-        res,
-        HttpStatus.BAD_REQUEST,
-        "Category already exists",
-        false
-      );
-    }
-    await repository.updateCategory(id, categoryName);
+    console.log("updates", updates);
+
+    await repository.updateCategory(id, updates);
     sendResponseJson(res, HttpStatus.OK, "Category updated", true);
   } catch (error: any) {
     sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
