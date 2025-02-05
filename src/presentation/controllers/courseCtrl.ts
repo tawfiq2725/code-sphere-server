@@ -81,7 +81,7 @@ export const CourseCreate = async (
       price: numericPrice,
       prerequisites,
       thumbnail: thumbnailUrl,
-      isVisible: true,
+      isVisible: false,
       tutorId,
       courseStatus: "pending" as "pending",
       categoryName,

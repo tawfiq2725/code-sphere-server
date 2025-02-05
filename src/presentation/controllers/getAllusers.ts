@@ -197,9 +197,11 @@ export const GetallCoursesAdmin = async (
   }
 };
 
-export const ListCourse = async (req: Request, res: Response) => {
+export const toggleCourse = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { isVisible } = req.body;
+
     const courseRepo = new CourseRepositoryImpl();
     const existingCourse = await courseRepo.findCourseByGenerateId(id);
 
@@ -213,15 +215,14 @@ export const ListCourse = async (req: Request, res: Response) => {
     }
 
     const updatedCourse = {
-      isVisible: true,
-      courseStatus: "approved" as "approved",
+      isVisible,
     };
 
     const course = await courseRepo.updateCourse(id, updatedCourse);
     return sendResponseJson(
       res,
       HttpStatus.OK,
-      "Course listed successfully",
+      `Course ${isVisible ? "listed" : "unlisted"} successfully`,
       true,
       course
     );
@@ -234,13 +235,21 @@ export const ListCourse = async (req: Request, res: Response) => {
     );
   }
 };
-export const UnlistCourse = async (req: Request, res: Response) => {
+
+export const approveOrRejectCourse = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-
+    const { courseId } = req.params;
+    const { courseStatus, percentage } = req.body;
+    if (percentage < 0 || percentage > 100) {
+      return sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid percentage",
+        false
+      );
+    }
     const courseRepo = new CourseRepositoryImpl();
-    const existingCourse = await courseRepo.findCourseByGenerateId(id);
-
+    const existingCourse = await courseRepo.findCourseByGenerateId(courseId);
     if (!existingCourse) {
       return sendResponseJson(
         res,
@@ -249,17 +258,19 @@ export const UnlistCourse = async (req: Request, res: Response) => {
         false
       );
     }
-
+    // here i mention the calculation of the price
+    let sellingPrice = existingCourse.price / (1 - percentage / 100);
+    let wholeSellingPrice = Math.round(sellingPrice / 10) * 10;
     const updatedCourse = {
-      isVisible: false,
-      courseStatus: "rejected" as "rejected",
+      isVisible: true,
+      courseStatus,
+      sellingPrice: wholeSellingPrice,
     };
-
-    const course = await courseRepo.updateCourse(id, updatedCourse);
+    const course = await courseRepo.updateCourse(courseId, updatedCourse);
     return sendResponseJson(
       res,
       HttpStatus.OK,
-      "Course listed successfully",
+      `Course ${courseStatus} successfully`,
       true,
       course
     );

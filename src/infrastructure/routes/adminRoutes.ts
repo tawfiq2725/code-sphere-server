@@ -7,9 +7,9 @@ import {
   getAllTutorList,
   getAllTutorListApplication,
   getAllUsersList,
-  ListCourse,
   UnblockUser,
-  UnlistCourse,
+  toggleCourse,
+  approveOrRejectCourse,
 } from "../../presentation/controllers/getAllusers";
 import { authenticate } from "../../presentation/middleware/auth";
 import { getTutorCertificates } from "../../presentation/controllers/tutorCtrl";
@@ -28,6 +28,10 @@ router.patch("/approve-tutor/:tutorId", authenticate, approveTutor);
 router.patch("/disapprove-tutor/:tutorId", authenticate, disapproveTutor);
 router.get("/tutor/certificates/:id", authenticate, getTutorCertificates);
 router.get("/get-courses", authenticate, GetallCoursesAdmin);
-router.patch("/list-course/:id", authenticate, ListCourse);
-router.patch("/unlist-course/:id", authenticate, UnlistCourse);
+router.patch("/toggle-course/:id", authenticate, toggleCourse);
+router.patch(
+  "/api/approve-or-reject-course/:courseId",
+  authenticate,
+  approveOrRejectCourse
+);
 export default router;

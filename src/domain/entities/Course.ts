@@ -11,6 +11,7 @@ export class Course {
     public isVisible: boolean,
     public tutorId: string,
     public courseStatus: "pending" | "approved" | "rejected",
-    public categoryName: string
+    public categoryName: string,
+    public sellingPrice?: number
   ) {}
 }

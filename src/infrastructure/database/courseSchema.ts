@@ -12,6 +12,7 @@ interface ICourse extends Document {
   tutorId: string;
   courseStatus: "pending" | "approved" | "rejected";
   categoryName: string;
+  sellingPrice?: number;
 }
 
 const courseSchema = new Schema<ICourse>(
@@ -62,6 +63,10 @@ const courseSchema = new Schema<ICourse>(
     },
     categoryName: {
       type: String,
+      required: false,
+    },
+    sellingPrice: {
+      type: Number,
       required: false,
     },
   },

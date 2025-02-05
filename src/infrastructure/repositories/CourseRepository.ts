@@ -49,7 +49,7 @@ export class CourseRepositoryImpl implements CourseInterface {
     }
     return null;
   }
-  public async findLatestCourse(): Promise<Course | null> {
+  public async findLatestCourse(): Promise<any> {
     return await CourseS.findOne().sort({ createdAt: -1 });
   }
 }
