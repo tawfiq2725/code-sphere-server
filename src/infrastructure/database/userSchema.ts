@@ -1,5 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface CourseProgress {
+  courseId: string;
+  progress: number;
+  completedChapters: string[];
+}
+
 export interface UserDocument extends Document {
   name: string;
   email: string;
@@ -18,6 +24,7 @@ export interface UserDocument extends Document {
   tutorStatus?: "pending" | "approved" | "rejected";
   profile?: string;
   bio?: string;
+  courseProgress?: CourseProgress[];
 }
 
 const UserSchema: Schema = new Schema(
@@ -89,6 +96,16 @@ const UserSchema: Schema = new Schema(
     bio: {
       type: String,
       required: false,
+    },
+    courseProgress: {
+      type: [
+        {
+          courseId: { type: String, required: true },
+          progress: { type: Number, required: true },
+          completedChapters: { type: [String], default: [] },
+        },
+      ],
+      default: [],
     },
   },
   {

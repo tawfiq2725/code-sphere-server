@@ -21,7 +21,8 @@ export class UserRepository implements UserInterface {
       userDoc.certificates,
       userDoc.tutorStatus,
       userDoc.profile,
-      userDoc.bio
+      userDoc.bio,
+      userDoc.courseProgress ?? []
     );
   }
 

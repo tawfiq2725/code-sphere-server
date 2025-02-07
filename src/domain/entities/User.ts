@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { CourseProgress } from "../../infrastructure/database/userSchema";
 
 export class Person {
   constructor(
@@ -18,7 +19,8 @@ export class Person {
     public certificates?: string[],
     public tutorStatus?: "pending" | "approved" | "rejected",
     public profile?: string,
-    public bio?: string
+    public bio?: string,
+    public courseProgress?: CourseProgress[]
   ) {}
 
   async hashPassword(): Promise<void> {
