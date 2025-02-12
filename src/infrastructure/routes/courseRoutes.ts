@@ -22,6 +22,13 @@ import {
   toggleVisiblityCategory,
   getCategory,
 } from "../../presentation/controllers/categoryCtrl";
+import {
+  createCoupon,
+  getAllCoupons,
+  toggleCoupon,
+  updateCoupon,
+} from "../../presentation/controllers/couponCtrl";
+import { updateCourseProgress } from "../../presentation/controllers/courseCtrlProgres";
 const router = express.Router();
 
 router.post(
@@ -53,6 +60,12 @@ router.patch(
   updateChapter
 );
 
+// coupons
+router.get("/get-coupons", authenticate, getAllCoupons);
+router.post("/create-coupon", authenticate, createCoupon);
+router.patch("/update-coupon/:id", authenticate, updateCoupon);
+router.patch("/coupon/toggle/:id", authenticate, toggleCoupon);
+
 // Not auth
 router.get("/get-chapter-front/:courseId", getChapter);
 
@@ -65,6 +78,10 @@ router.patch(
   authenticate,
   toggleVisiblityCategory
 );
+
+// update progress chapters
+router.patch(`/update-progress`, authenticate, updateCourseProgress);
+
 // not auth
 router.get("/get-category/:id", getCategory);
 router.get("/get-category-all", getAllCategory);

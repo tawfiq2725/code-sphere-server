@@ -13,6 +13,12 @@ import {
 } from "../../presentation/controllers/getAllusers";
 import { authenticate } from "../../presentation/middleware/auth";
 import { getTutorCertificates } from "../../presentation/controllers/tutorCtrl";
+import {
+  createMembership,
+  getAllMemberships,
+  toggleMembershipStatus,
+  updateMembership,
+} from "../../presentation/controllers/membershipCtrl";
 const router = express.Router();
 
 router.get("/get-users", authenticate, getAllUsersList);
@@ -34,4 +40,10 @@ router.patch(
   authenticate,
   approveOrRejectCourse
 );
+
+router.post("/add-membership", createMembership);
+router.patch("/edit-membership/:id", updateMembership);
+router.patch("/toggle-membership/:id", toggleMembershipStatus);
+router.get("/get-memberships", authenticate, getAllMemberships);
+
 export default router;

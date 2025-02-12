@@ -159,3 +159,22 @@ export const getOrderByUserId = async (
     );
   }
 };
+
+export const getAllOrders = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const orderRepo = new OrderRepository();
+    const orders = await orderRepo.getAllOrders();
+    return sendResponseJson(res, HttpStatus.OK, "Orders", true, orders);
+  } catch (error) {
+    return sendResponseJson(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Internal Server Error",
+      false,
+      error
+    );
+  }
+};
