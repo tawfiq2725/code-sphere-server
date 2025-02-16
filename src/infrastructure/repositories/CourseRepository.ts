@@ -52,4 +52,7 @@ export class CourseRepositoryImpl implements CourseInterface {
   public async findLatestCourse(): Promise<any> {
     return await CourseS.findOne().sort({ createdAt: -1 });
   }
+  public async findCouresByCategoryId(categoryId: string): Promise<Course[]> {
+    return await CourseS.find({ categoryName: categoryId });
+  }
 }

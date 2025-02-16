@@ -15,7 +15,9 @@ import { authenticate } from "../../presentation/middleware/auth";
 import { getTutorCertificates } from "../../presentation/controllers/tutorCtrl";
 import {
   createMembership,
+  getAllMembershipOrders,
   getAllMemberships,
+  getMembershipOrderById,
   toggleMembershipStatus,
   updateMembership,
 } from "../../presentation/controllers/membershipCtrl";
@@ -45,5 +47,6 @@ router.post("/add-membership", createMembership);
 router.patch("/edit-membership/:id", updateMembership);
 router.patch("/toggle-membership/:id", toggleMembershipStatus);
 router.get("/get-memberships", authenticate, getAllMemberships);
-
+router.get("/get-memberships/orders", getAllMembershipOrders);
+router.get("/get-memberships/orders/:id", getMembershipOrderById);
 export default router;

@@ -37,7 +37,7 @@ export class MembershipRepository implements IMembershipRepository {
 
   async findMembershipByUserId(userId: string): Promise<Membership | null> {
     const membership = await MemebershipModel.findOne({
-      userId: new Types.ObjectId(userId),
+      userId,
     });
     return membership ? this.mapDocumentToEntity(membership) : null;
   }
@@ -45,6 +45,11 @@ export class MembershipRepository implements IMembershipRepository {
   async getAllMemberships(): Promise<Membership[]> {
     const memberships = await MemebershipModel.find({ status: true });
     return memberships.map(this.mapDocumentToEntity);
+  }
+
+  async findMembershipByIdV2(membershipId: string): Promise<Membership | null> {
+    const membership = await MemebershipModel.findById(membershipId);
+    return membership ? this.mapDocumentToEntity(membership) : null;
   }
 
   async findCourseByCategoryId(categoryId: string): Promise<Membership[]> {

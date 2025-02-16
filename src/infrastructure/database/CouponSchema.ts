@@ -1,20 +1,20 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 
-export interface Iuser {
-  _id: string;
+export interface IUsedBy {
+  userId: Types.ObjectId;
   count: number;
 }
 
-export interface ICoupon extends Document {
+export interface ICoupon {
   couponName: string;
   couponCode: string;
   couponDiscount: number;
   startDate: Date;
   expireAt: Date;
   couponStatus: boolean;
-  usedBy?: Iuser;
+  _id?: string;
+  usedBy?: IUsedBy[];
 }
-
 const couponSchema = new Schema<ICoupon>(
   {
     couponName: {
@@ -41,10 +41,12 @@ const couponSchema = new Schema<ICoupon>(
       type: Boolean,
       default: false,
     },
-    usedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
+    usedBy: [
+      {
+        count: { type: Number, default: 1 },
+        userId: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
   },
   {
     timestamps: true,

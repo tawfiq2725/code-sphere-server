@@ -6,6 +6,13 @@ export interface CourseProgress {
   completedChapters: string[];
 }
 
+export interface MembershipInfo {
+  categoryId: string;
+  startDate: Date;
+  endDate: Date;
+  status: "active" | "expired" | "inactive";
+}
+
 export interface UserDocument extends Document {
   name: string;
   email: string;
@@ -25,6 +32,7 @@ export interface UserDocument extends Document {
   profile?: string;
   bio?: string;
   courseProgress?: CourseProgress[];
+  membership?: MembershipInfo;
 }
 
 const UserSchema: Schema = new Schema(
@@ -106,6 +114,12 @@ const UserSchema: Schema = new Schema(
         },
       ],
       default: [],
+    },
+    membership: {
+      categoryId: { type: String },
+      startDate: { type: Date },
+      endDate: { type: Date },
+      status: { type: String, enum: ["active", "expired", "inactive"] },
     },
   },
   {

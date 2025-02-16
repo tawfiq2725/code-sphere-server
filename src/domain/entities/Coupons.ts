@@ -1,3 +1,5 @@
+import { IUsedBy } from "../../infrastructure/database/CouponSchema";
+
 export class Coupons {
   constructor(
     public couponName: string,
@@ -6,6 +8,7 @@ export class Coupons {
     public startDate: Date,
     public expireAt: Date,
     public couponStatus: boolean,
-    public usedBy?: string
+    public _id?: string,
+    public usedBy?: IUsedBy[]
   ) {}
 }

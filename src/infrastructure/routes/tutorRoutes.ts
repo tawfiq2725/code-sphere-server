@@ -1,5 +1,8 @@
 import express from "express";
-import { updateProfile } from "../../presentation/controllers/tutorCtrl";
+import {
+  enrollStudents,
+  updateProfile,
+} from "../../presentation/controllers/tutorCtrl";
 import { authenticate } from "../../presentation/middleware/auth";
 import { getProfile } from "../../presentation/controllers/userController";
 import { upload } from "../../config/multerConfig";
@@ -16,5 +19,6 @@ router.patch(
   upload.fields(multerFields),
   updateProfile
 );
+router.get("/enroll-students/:id", authenticate, enrollStudents);
 
 export default router;

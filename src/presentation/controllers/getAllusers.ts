@@ -14,8 +14,11 @@ export const getAllUsersList = async (req: Request, res: Response) => {
   try {
     const userRepository = new UserRepository();
     const getAllUsers = new GetAllUsers(userRepository);
-
-    const users = await getAllUsers.execute();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const search = req.query.search as string;
+    const category = req.query.category as string;
+    const users = await getAllUsers.execute({ page, limit, search, category });
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -32,8 +35,11 @@ export const getAllTutorList = async (req: Request, res: Response) => {
   try {
     const userRepository = new UserRepository();
     const getAllTutor = new GetAllTutor(userRepository);
-
-    const users = await getAllTutor.execute();
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const search = req.query.search as string;
+    const category = req.query.category as string;
+    const users = await getAllTutor.execute({ page, limit, search, category });
     sendResponseJson(
       res,
       HttpStatus.OK,

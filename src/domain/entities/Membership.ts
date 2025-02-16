@@ -8,11 +8,6 @@ export class Membership {
     public price: number,
     public label: string,
     public status: boolean,
-    public userId?: Types.ObjectId | string,
-    public categoryId?: Types.ObjectId | string,
-    public membershipStatus?: "active" | "inactive",
-    public membershipStartDate?: Date,
-    public membershipEndDate?: Date,
-    public transactionId?: string
+    public duration: number
   ) {}
 }

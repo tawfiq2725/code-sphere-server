@@ -1,56 +1,54 @@
-interface QueryOptions {
-  page?: number | string;
-  limit?: number | string;
-  category?: string;
+import { Model } from "mongoose";
+
+export interface PaginationOptions {
+  page?: number;
+  limit?: number;
   search?: string;
-  sortBy?: string;
-  order?: "asc" | "desc";
+  category?: string;
 }
-
-interface QueryResult {
-  filter: Record<string, any>;
-  options: {
-    skip: number;
+export const paginate = async <T>(
+  model: Model<T>,
+  options: PaginationOptions,
+  additionalQuery: Record<string, any> = {}
+): Promise<{
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
     limit: number;
-    sort: Record<string, number>;
+    totalPages: number;
   };
-}
+}> => {
+  const page = options.page && options.page > 0 ? options.page : 1;
+  const limit = options.limit && options.limit > 0 ? options.limit : 10;
+  const skip = (page - 1) * limit;
 
-const queryHelper = (query: any, options: QueryOptions): QueryResult => {
-  let {
-    page = 1,
-    limit = 10,
-    category,
-    search,
-    sortBy = "createdAt",
-    order = "desc",
-  } = options;
+  const query: Record<string, any> = { ...additionalQuery };
 
-  page = parseInt(page as string);
-  limit = parseInt(limit as string);
-  let skip = (page - 1) * limit;
-
-  let filter: Record<string, any> = {};
-
-  if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
+  if (options.search) {
+    query.$or = [
+      { name: { $regex: options.search, $options: "i" } },
+      { email: { $regex: options.search, $options: "i" } },
     ];
   }
 
-  if (category) {
-    filter.category = category;
+  if (options.category) {
+    query.category = options.category;
   }
 
+  const dataPromise = model.find(query).skip(skip).limit(limit);
+  const countPromise = model.countDocuments(query);
+
+  const [data, total] = await Promise.all([dataPromise, countPromise]);
+  const totalPages = Math.ceil(total / limit);
+
   return {
-    filter,
-    options: {
-      skip,
+    data,
+    pagination: {
+      total,
+      page,
       limit,
-      sort: { [sortBy]: order === "desc" ? -1 : 1 },
+      totalPages,
     },
   };
 };
-
-module.exports = queryHelper;

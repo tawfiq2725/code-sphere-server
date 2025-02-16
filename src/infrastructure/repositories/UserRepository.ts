@@ -1,6 +1,7 @@
 import { UserInterface } from "../../domain/interface/User";
 import { Person } from "../../domain/entities/User";
 import UserModel, { UserDocument } from "../database/userSchema";
+import { PaginationOptions, paginate } from "../../utils/queryHelper";
 
 export class UserRepository implements UserInterface {
   private maptoEntity(userDoc: UserDocument): Person {
@@ -52,16 +53,15 @@ export class UserRepository implements UserInterface {
     return userDoc ? this.maptoEntity(userDoc) : null;
   }
 
-  public async getAllUsers(): Promise<any> {
-    const userDocs = await UserModel.find({ role: "student" }).exec();
+  public async getAllUsers(options: PaginationOptions): Promise<any> {
+    const userQuery = { role: "student" };
+    const userDocs = await paginate(UserModel, options, userQuery);
     return userDocs;
   }
 
-  public async getAllTutor(): Promise<any> {
-    const userDocs = await UserModel.find({
-      role: "tutor",
-      isTutor: true,
-    }).exec();
+  public async getAllTutor(options: PaginationOptions): Promise<any> {
+    const tutorQuery = { role: "tutor", isTutor: true };
+    const userDocs = await paginate(UserModel, options, tutorQuery);
     return userDocs;
   }
   public async getAllTutorApplication(): Promise<any> {
@@ -118,5 +118,14 @@ export class UserRepository implements UserInterface {
   public async getUserProfileImage(id: string): Promise<any> {
     const userDoc = await UserModel.findById(id).select("profile").exec();
     return userDoc ? userDoc.profile : null;
+  }
+
+  public async getEnrollStudents(courseId: string): Promise<any> {
+    const userDocs = await UserModel.find({
+      courseProgress: {
+        $elemMatch: { courseId: courseId },
+      },
+    }).exec();
+    return userDocs;
   }
 }

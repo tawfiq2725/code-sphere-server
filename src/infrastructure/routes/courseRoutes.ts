@@ -61,10 +61,10 @@ router.patch(
 );
 
 // coupons
-router.get("/get-coupons", authenticate, getAllCoupons);
-router.post("/create-coupon", authenticate, createCoupon);
-router.patch("/update-coupon/:id", authenticate, updateCoupon);
-router.patch("/coupon/toggle/:id", authenticate, toggleCoupon);
+router.get("/get-coupons", getAllCoupons);
+router.post("/create-coupon", createCoupon);
+router.patch("/update-coupon/:id", updateCoupon);
+router.patch("/coupon/toggle/:id", toggleCoupon);
 
 // Not auth
 router.get("/get-chapter-front/:courseId", getChapter);
@@ -78,8 +78,6 @@ router.patch(
   authenticate,
   toggleVisiblityCategory
 );
-
-// update progress chapters
 router.patch(`/update-progress`, authenticate, updateCourseProgress);
 
 // not auth

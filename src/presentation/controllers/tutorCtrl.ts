@@ -67,3 +67,20 @@ export const getTutorCertificates = async (
     sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
 };
+
+export const enrollStudents = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const repo = new UserRepository();
+    const students = await repo.getEnrollStudents(id);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Enrolled Students",
+      true,
+      students
+    );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};

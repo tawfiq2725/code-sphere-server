@@ -6,12 +6,7 @@ interface MembershipInterface extends Document {
   price: number;
   label: string;
   status: boolean;
-  userId?: ObjectId;
-  categoryId?: ObjectId;
-  membershipStatus?: "active" | "inactive";
-  membershipStartDate?: Date;
-  membershipEndDate?: Date;
-  transactionId?: string;
+  duration: number;
 }
 
 const MembershipSchema = new Schema<MembershipInterface>(
@@ -42,32 +37,9 @@ const MembershipSchema = new Schema<MembershipInterface>(
       required: true,
       default: false,
     },
-    userId: {
-      type: Types.ObjectId,
-      required: false,
-      ref: "User",
-    },
-    categoryId: {
-      type: Types.ObjectId,
-      required: false,
-      ref: "Category",
-    },
-    membershipStatus: {
-      type: String,
-      enum: ["active", "inactive"],
-      required: false,
-    },
-    membershipStartDate: {
-      type: Date,
-      required: false,
-    },
-    membershipEndDate: {
-      type: Date,
-      required: false,
-    },
-    transactionId: {
-      type: String,
-      required: false,
+    duration: {
+      type: Number,
+      required: true,
     },
   },
   {
@@ -76,5 +48,4 @@ const MembershipSchema = new Schema<MembershipInterface>(
 );
 
 const Memebership = model<MembershipInterface>("Membership", MembershipSchema);
-
 export default Memebership;

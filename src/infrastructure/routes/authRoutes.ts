@@ -11,6 +11,7 @@ import {
   newPassword,
   roleSelection,
   updateUserProfileImage,
+  verifyCoupon,
 } from "../../presentation/controllers/userController";
 import HttpStatus from "../../utils/statusCodes";
 import sendResponseJson from "../../utils/message";
@@ -20,6 +21,11 @@ import {
 } from "../../presentation/controllers/otpController";
 import { upload } from "../../config/multerConfig";
 import { authenticate } from "../../presentation/middleware/auth";
+import {
+  getCoursesByMembershipId,
+  getMembershipById,
+  getMemberships,
+} from "../../presentation/controllers/membershipCtrl";
 
 const router = express.Router();
 
@@ -31,6 +37,7 @@ router.post("/send-otp", generateOtpHandler);
 router.post("/resend-otp", generateOtpHandler);
 router.post("/verify-otp", verifyOtpHandler);
 router.post("/login", loginUser);
+
 router.post("/forgot-password", generateOtpHandlerF);
 router.post("/verify-forgot-password", verifyOtpHandler);
 router.post("/new-password", newPassword);
@@ -47,4 +54,13 @@ router.patch(
   authenticate,
   updateUserProfileImage
 );
+
+// user side
+router.get("/get-memberships", getMemberships);
+router.get("/get-membership/:id", getMembershipById);
+router.get("/get-membership/category/courses/:id", getCoursesByMembershipId);
+
+// coupon apply
+router.post("/api/verify-coupon", verifyCoupon);
+
 export default router;

@@ -8,6 +8,7 @@ import HttpStatus from "../../utils/statusCodes";
 import { admin } from "../../firebase";
 import UserS from "../../infrastructure/database/userSchema";
 import bcrypt from "bcryptjs";
+import { IUsedBy } from "../../infrastructure/database/CouponSchema";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -204,6 +205,7 @@ import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpReposito
 import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { sendOtpEmail } from "../../application/services/OtpService";
 import { FileUploadService } from "../../application/services/filesUpload";
+import { CouponRepository } from "../../infrastructure/repositories/CouponRepository";
 
 export const googleAuth = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -456,5 +458,54 @@ export const updateUserProfileImage = async (
       e.message,
       false
     );
+  }
+};
+
+export const verifyCoupon = async (req: Request, res: Response) => {
+  try {
+    const { couponCode, userId } = req.body;
+    console.log(couponCode, userId);
+    const couponRepo = new CouponRepository();
+    console.log("starting----------------1");
+    let coupon = await couponRepo.findCouponByCouponCode(couponCode);
+    console.log("starting----------------2");
+
+    if (!coupon) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Coupon not found",
+        false
+      );
+    }
+    console.log("starting----------------3");
+
+    const alreadyUsed = coupon.usedBy.find((usage) => usage.userId === userId);
+    console.log("starting----------------4");
+
+    if (alreadyUsed) {
+      return sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Coupon already used",
+        false
+      );
+    }
+    console.log("starting----------------5");
+
+    const usageData: IUsedBy = { count: 1, userId };
+    console.log("starting----------------6");
+    coupon = await couponRepo.applyCouponUsage(coupon._id, usageData);
+    console.log("starting----------------7");
+
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Coupon applied successfully",
+      true,
+      coupon
+    );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
 };

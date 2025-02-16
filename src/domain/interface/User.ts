@@ -1,3 +1,4 @@
+import { PaginationOptions } from "../../utils/queryHelper";
 import { Person } from "../entities/User";
 
 export interface UserInterface {
@@ -5,8 +6,8 @@ export interface UserInterface {
   findByEmail(email: string): Promise<Person | null>;
   findById(id: string): Promise<Person | null>;
   update(id: string, user: Person): Promise<Person | null>;
-  getAllUsers(): Promise<Person[]>;
-  getAllTutor(): Promise<Person[]>;
+  getAllUsers(options: PaginationOptions): Promise<Person[]>;
+  getAllTutor(options: PaginationOptions): Promise<Person[]>;
   getAllTutorApplication(): Promise<Person[]>;
   BlockUser(id: string): Promise<Person | null>;
   UnblockUser(id: string): Promise<Person | null>;
