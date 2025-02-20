@@ -25,7 +25,16 @@ export const createOrder = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { amount, currency, userId, courseId } = req.body;
+    const {
+      amount,
+      currency,
+      userId,
+      courseId,
+      isApplied,
+      couponCode,
+      couponDiscount,
+    } = req.body;
+    console.log(req.body, "check roshan data");
     const options = {
       amount: amount * 100,
       currency: currency,
@@ -44,6 +53,9 @@ export const createOrder = async (
       currency,
       paymentStatus: "pending" as "pending",
       orderStatus: "pending" as "pending",
+      isApplied,
+      couponCode,
+      couponDiscount,
     };
     const orderRepo = new OrderRepository();
 

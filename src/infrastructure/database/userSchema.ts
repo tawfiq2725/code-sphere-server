@@ -4,6 +4,7 @@ export interface CourseProgress {
   courseId: string;
   progress: number;
   completedChapters: string[];
+  totalChapters: number;
 }
 
 export interface MembershipInfo {
@@ -111,6 +112,7 @@ const UserSchema: Schema = new Schema(
           courseId: { type: String, required: true },
           progress: { type: Number, required: true },
           completedChapters: { type: [String], default: [] },
+          totalChapters: { type: Number, default: 0 },
         },
       ],
       default: [],

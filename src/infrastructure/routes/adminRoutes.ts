@@ -43,10 +43,11 @@ router.patch(
   approveOrRejectCourse
 );
 
-router.post("/add-membership", createMembership);
-router.patch("/edit-membership/:id", updateMembership);
-router.patch("/toggle-membership/:id", toggleMembershipStatus);
+router.post("/add-membership", authenticate, createMembership);
+router.patch("/edit-membership/:id", authenticate, updateMembership);
+router.patch("/toggle-membership/:id", authenticate, toggleMembershipStatus);
 router.get("/get-memberships", authenticate, getAllMemberships);
-router.get("/get-memberships/orders", getAllMembershipOrders);
-router.get("/get-memberships/orders/:id", getMembershipOrderById);
+router.get("/get-memberships/orders", authenticate, getAllMembershipOrders);
+router.get("/get-memberships/orders/:id", authenticate, getMembershipOrderById);
+
 export default router;

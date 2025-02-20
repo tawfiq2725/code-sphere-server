@@ -1,12 +1,15 @@
 import User from "../../infrastructure/database/userSchema";
 import Membership from "../../infrastructure/database/MembershipSchema";
 import Course from "../../infrastructure/database/courseSchema";
+import Chapter from "../../infrastructure/database/chapterSchema";
 
 export const enrollUserInCourse = async (
   userId: string,
   courseId: string
 ): Promise<void> => {
   try {
+    const countChapters = await Chapter.countDocuments({ courseId });
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
@@ -15,6 +18,7 @@ export const enrollUserInCourse = async (
             courseId,
             progress: 0,
             completedChapters: [],
+            totalChapters: countChapters,
           },
         },
       },

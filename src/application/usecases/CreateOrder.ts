@@ -19,7 +19,12 @@ export class createOrderuseCase {
       orderData.totalAmount,
       orderData.orderStatus,
       orderData.paymentStatus,
-      orderData.isApplied
+      orderData.isApplied,
+      orderData.razorpayOrderId,
+      orderData.razorpayPaymentId,
+      orderData.razorpaySignature,
+      orderData.couponCode,
+      orderData.couponDiscount
     );
     console.log("starting ---------------12");
     await this.orderRepository.create(newOrder);

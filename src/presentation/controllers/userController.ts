@@ -480,7 +480,9 @@ export const verifyCoupon = async (req: Request, res: Response) => {
     }
     console.log("starting----------------3");
 
-    const alreadyUsed = coupon.usedBy.find((usage) => usage.userId === userId);
+    const alreadyUsed = coupon?.usedBy?.find(
+      (usage) => usage.userId === userId
+    );
     console.log("starting----------------4");
 
     if (alreadyUsed) {
@@ -495,7 +497,11 @@ export const verifyCoupon = async (req: Request, res: Response) => {
 
     const usageData: IUsedBy = { count: 1, userId };
     console.log("starting----------------6");
-    coupon = await couponRepo.applyCouponUsage(coupon._id, usageData);
+    if (coupon && coupon._id) {
+      coupon = await couponRepo.applyCouponUsage(coupon._id, usageData);
+    } else {
+      throw new Error("Coupon ID is undefined");
+    }
     console.log("starting----------------7");
 
     return sendResponseJson(

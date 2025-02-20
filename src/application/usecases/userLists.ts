@@ -18,8 +18,8 @@ export class GetAllTutor {
 }
 export class GetAllTutorApplication {
   constructor(private readonly userRepository: UserInterface) {}
-  async execute(): Promise<Person[]> {
-    const tutorList = this.userRepository.getAllTutorApplication();
+  async execute(options: PaginationOptions): Promise<Person[]> {
+    const tutorList = this.userRepository.getAllTutorApplication(options);
     return tutorList;
   }
 }

@@ -13,6 +13,8 @@ interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
 
+import User from "../../infrastructure/database/userSchema"; // Import User model
+
 export const addChapter = async (
   req: MulterRequest,
   res: Response
@@ -32,6 +34,7 @@ export const addChapter = async (
         false
       );
     }
+
     console.log("start video");
     const videoUrl = await new FileUploadService().uploadCourseVideo(
       courseId,
@@ -55,17 +58,30 @@ export const addChapter = async (
       video: videoUrl,
       status: true,
     };
+
     const repositories = new ChapterRepository();
     const chapter = new CreateChapter(repositories);
-    await chapter.execute(chapterData);
+    const newChapter = await chapter.execute(chapterData);
+
     console.log("chapter added successfully");
+
+    await User.updateMany(
+      { "courseProgress.courseId": courseId },
+      {
+        $inc: { "courseProgress.$.totalChapters": 1 },
+      }
+    );
+
+    console.log("User courseProgress updated");
+
     return sendResponseJson(
       res,
       HttpStatus.CREATED,
-      "Chapter added successfully",
+      "Chapter added successfully and course progress updated",
       true
     );
   } catch (error) {
+    console.error("Error in adding chapter:", error);
     return sendResponseJson(
       res,
       HttpStatus.INTERNAL_SERVER_ERROR,
@@ -74,6 +90,7 @@ export const addChapter = async (
     );
   }
 };
+
 export const getChapter = async (req: Request, res: Response) => {
   try {
     const courseId = req.params.courseId;

@@ -4,6 +4,7 @@ export class Chapter {
     public chapterName: string,
     public chapterDescription: string,
     public video: string,
-    public status: boolean
+    public status: boolean,
+    public id?: string
   ) {}
 }

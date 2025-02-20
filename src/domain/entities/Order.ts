@@ -10,6 +10,8 @@ export class Order {
     public isApplied?: boolean,
     public razorpayOrderId?: string,
     public razorpayPaymentId?: string,
-    public razorpaySignature?: string
+    public razorpaySignature?: string,
+    public couponCode?: string,
+    public couponDiscount?: string
   ) {}
 }

@@ -36,6 +36,7 @@ export class CourseProgress {
           courseId,
           completedChapters: [chapterId],
           progress: (1 / totalChapters) * 100,
+          totalChapters,
         };
         user.courseProgress?.push(progressEntry);
       }

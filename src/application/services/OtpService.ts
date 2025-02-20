@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { configBrevo } from "../../config/ConfigSetup";
-const transporter = nodemailer.createTransport({
+export const transporter = nodemailer.createTransport({
   host: configBrevo.BREVO.SMTP_SERVER,
   port: configBrevo.BREVO.PORT,
   secure: false,

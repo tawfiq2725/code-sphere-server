@@ -1,4 +1,3 @@
-import { Model } from "mongoose";
 import CouponS from "../database/CouponSchema";
 import { Coupons } from "../../domain/entities/Coupons";
 import { ICoupon, IUsedBy } from "../database/CouponSchema";

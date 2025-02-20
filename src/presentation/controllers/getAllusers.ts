@@ -56,10 +56,14 @@ export const getAllTutorListApplication = async (
   res: Response
 ) => {
   try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const search = req.query.search as string;
+    const category = req.query.category as string;
     const userRepository = new UserRepository();
     const getAllTutor = new GetAllTutorApplication(userRepository);
 
-    const users = await getAllTutor.execute();
+    const users = await getAllTutor.execute({ page, limit, search, category });
     sendResponseJson(
       res,
       HttpStatus.OK,

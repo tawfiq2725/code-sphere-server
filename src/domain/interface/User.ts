@@ -8,7 +8,7 @@ export interface UserInterface {
   update(id: string, user: Person): Promise<Person | null>;
   getAllUsers(options: PaginationOptions): Promise<Person[]>;
   getAllTutor(options: PaginationOptions): Promise<Person[]>;
-  getAllTutorApplication(): Promise<Person[]>;
+  getAllTutorApplication(options: PaginationOptions): Promise<Person[]>;
   BlockUser(id: string): Promise<Person | null>;
   UnblockUser(id: string): Promise<Person | null>;
   approveTutor(id: string): Promise<Person | null>;

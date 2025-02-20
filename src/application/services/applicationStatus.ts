@@ -1,5 +1,5 @@
 import { configBrevo } from "../../config/ConfigSetup";
-import { transporter } from "./OtpService";
+import { transporter } from "../services/OtpService";
 import emailTemplate from "../../utils/email";
 
 export const sendEmail = async (

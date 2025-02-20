@@ -64,11 +64,11 @@ export class UserRepository implements UserInterface {
     const userDocs = await paginate(UserModel, options, tutorQuery);
     return userDocs;
   }
-  public async getAllTutorApplication(): Promise<any> {
-    const userDocs = await UserModel.find({
-      role: "tutor",
-      isTutor: false,
-    }).exec();
+  public async getAllTutorApplication(
+    options: PaginationOptions
+  ): Promise<any> {
+    const tutorQuery = { role: "tutor", isTutor: false };
+    const userDocs = await paginate(UserModel, options, tutorQuery);
     return userDocs;
   }
 
