@@ -8,6 +8,7 @@ import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { MembershipOrderRepository } from "../../infrastructure/repositories/MembershipOrder";
 import { CourseRepositoryImpl } from "../../infrastructure/repositories/CourseRepository";
+import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 export const createMembership = async (req: Request, res: Response) => {
   try {
     const { membershipName, membershipDescription, price, label, duration } =
@@ -204,6 +205,23 @@ export const getMembershipOrderById = async (req: Request, res: Response) => {
       "Membership order retrieved successfully",
       true,
       membership
+    );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const getCertificatesByStudent = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userRepo = new UserRepository();
+  try {
+    const certificates = await userRepo.getCertificatesByStudent(id);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Certificates retrieved successfully",
+      true,
+      certificates
     );
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);

@@ -14,6 +14,14 @@ export interface MembershipInfo {
   status: "active" | "expired" | "inactive";
 }
 
+export interface UserCertificate {
+  courseId: string;
+  status: "approved" | "unavailable";
+  certificateUrl?: string;
+  issuedDate?: Date;
+  approvedBy?: string;
+}
+
 export interface UserDocument extends Document {
   name: string;
   email: string;
@@ -34,6 +42,7 @@ export interface UserDocument extends Document {
   bio?: string;
   courseProgress?: CourseProgress[];
   membership?: MembershipInfo;
+  CourseCertificate?: UserCertificate[];
 }
 
 const UserSchema: Schema = new Schema(
@@ -122,6 +131,22 @@ const UserSchema: Schema = new Schema(
       startDate: { type: Date },
       endDate: { type: Date },
       status: { type: String, enum: ["active", "expired", "inactive"] },
+    },
+    CourseCertificate: {
+      type: [
+        {
+          courseId: { type: String, required: true },
+          status: {
+            type: String,
+            enum: ["approved", "unavailable"],
+            default: "unavailable",
+          },
+          certificateUrl: { type: String, required: false },
+          issuedDate: { type: Date, required: false },
+          approvedBy: { type: String, required: false },
+        },
+      ],
+      default: [],
     },
   },
   {

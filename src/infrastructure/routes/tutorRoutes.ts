@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  approveCourseCertificate,
   enrollStudents,
   updateProfile,
 } from "../../presentation/controllers/tutorCtrl";
@@ -20,5 +21,10 @@ router.patch(
   updateProfile
 );
 router.get("/enroll-students/:id", authenticate, enrollStudents);
+router.post(
+  "/api/approve-certificate",
 
+  upload.single("pdf"),
+  approveCourseCertificate
+);
 export default router;

@@ -89,4 +89,22 @@ export class FileUploadService {
     );
     return imageUrl?.split("?")[0];
   }
+
+  async uploadCourseCertificate(
+    userId: string,
+    certificate: Express.Multer.File
+  ): Promise<string | undefined> {
+    console.log("Uploading course certificate");
+    console.log("User ID:", userId, "Certificate:", certificate);
+    const certKey = `student/certificate/${userId}/`;
+    const uploadedKey = await this.awsConfig.uploadFileToS3(
+      certKey,
+      certificate
+    );
+    const certUrl = await this.awsConfig.getfile(
+      uploadedKey.split("/").pop()!,
+      certKey
+    );
+    return certUrl?.split("?")[0];
+  }
 }

@@ -5,6 +5,8 @@ import { UserRepository } from "../../infrastructure/repositories/UserRepository
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { UpdateProfileService } from "../../application/services/updateProfile";
+import { approveCertificateUsecase } from "../../application/usecases/userLists";
+import { FileUploadService } from "../../application/services/filesUpload";
 
 export const updateProfile = async (
   req: Request,
@@ -79,6 +81,52 @@ export const enrollStudents = async (req: Request, res: Response) => {
       "Enrolled Students",
       true,
       students
+    );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const approveCourseCertificate = async (req: Request, res: Response) => {
+  try {
+    console.log("starting................................1");
+    const { tutorName, studentId, courseId } = req.body;
+    console.log("starting................................2");
+
+    const pdf = req.file;
+    console.log("starting................................3");
+    console.log("check this pdf", pdf);
+
+    if (!pdf) {
+      return sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "No PDF file uploaded",
+        false
+      );
+    }
+
+    const repo = new UserRepository();
+    console.log("starting................................4");
+    const fileUploadservice = new FileUploadService();
+    console.log("starting................................5");
+    const approve = new approveCertificateUsecase(repo, fileUploadservice);
+    console.log("starting................................6");
+
+    const result = await approve.execute({
+      tutorName,
+      studentId,
+      courseId,
+      pdf,
+    });
+    console.log("final");
+
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Certificate Approved",
+      true,
+      result
     );
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);

@@ -14,4 +14,5 @@ export interface UserInterface {
   approveTutor(id: string): Promise<Person | null>;
   disapproveTutor(id: string): Promise<Person | null>;
   getProfile(id: string): Promise<Person | null>;
+  approveCertificate(data: any): Promise<Person | null>;
 }

@@ -22,6 +22,7 @@ import {
 import { upload } from "../../config/multerConfig";
 import { authenticate } from "../../presentation/middleware/auth";
 import {
+  getCertificatesByStudent,
   getCoursesByMembershipId,
   getMembershipById,
   getMemberships,
@@ -59,7 +60,7 @@ router.patch(
 router.get("/get-memberships", getMemberships);
 router.get("/get-membership/:id", getMembershipById);
 router.get("/get-membership/category/courses/:id", getCoursesByMembershipId);
-
+router.get("/get-certifcates/:id", getCertificatesByStudent);
 // coupon apply
 router.post("/api/verify-coupon", verifyCoupon);
 

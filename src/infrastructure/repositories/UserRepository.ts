@@ -128,4 +128,29 @@ export class UserRepository implements UserInterface {
     }).exec();
     return userDocs;
   }
+  public async approveCertificate(data: any): Promise<any> {
+    console.log("studentDAta", data);
+    console.log(data.studentId);
+    const userDoc = await UserModel.findByIdAndUpdate(
+      data.studentId,
+      {
+        $push: {
+          CourseCertificate: {
+            courseId: data.courseId,
+            status: data.status,
+            certificateUrl: data.certificateUrl,
+            issuedDate: data.issueDate, // Changed to match the schema field
+            approvedBy: data.approvedBy,
+          },
+        },
+      },
+      { new: true }
+    ).exec();
+    console.log("updated successfully");
+    return userDoc ? this.maptoEntity(userDoc) : null;
+  }
+  public async getCertificatesByStudent(studentId: string): Promise<any> {
+    const userDoc = await UserModel.findById(studentId);
+    return userDoc ? userDoc.CourseCertificate : null;
+  }
 }
