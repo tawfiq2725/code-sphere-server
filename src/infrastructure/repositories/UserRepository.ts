@@ -153,4 +153,38 @@ export class UserRepository implements UserInterface {
     const userDoc = await UserModel.findById(studentId);
     return userDoc ? userDoc.CourseCertificate : null;
   }
+
+  public async googleAuthLogin(
+    userData: any
+  ): Promise<{ user: any; isNewUser: boolean }> {
+    const { email, name, googleId, picture } = userData;
+    let user = await UserModel.findOne({ email }).exec();
+    let isNewUser = false;
+    if (!user) {
+      user = new UserModel({
+        email,
+        name,
+        googleId,
+        isVerified: true,
+        profile: picture,
+      });
+      await user.save();
+      isNewUser = true;
+    }
+    return { user, isNewUser };
+  }
+
+  public async setRole(
+    userId: string,
+    role: "student" | "tutor" | "admin"
+  ): Promise<Person | null> {
+    const userData = await UserModel.findById(userId).exec();
+    if (!userData) {
+      throw new Error("User not found");
+    }
+
+    userData.role = role;
+    await userData.save();
+    return this.maptoEntity(userData);
+  }
 }

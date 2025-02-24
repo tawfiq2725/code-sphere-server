@@ -2,13 +2,24 @@ import { Request, Response } from "express";
 import { Person } from "../../domain/entities/User";
 import { CreateUser } from "../../application/usecases/CreateUser";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
-import { LoginUser } from "../../application/usecases/loginUser";
+import {
+  GoogleAuth,
+  LoginUser,
+  setRole,
+} from "../../application/usecases/loginUser";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
-import { admin } from "../../firebase";
 import UserS from "../../infrastructure/database/userSchema";
 import bcrypt from "bcryptjs";
 import { IUsedBy } from "../../infrastructure/database/CouponSchema";
+import jwt from "jsonwebtoken";
+import User from "../../infrastructure/database/userSchema";
+import { configJwt } from "../../config/ConfigSetup";
+import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
+import { GenerateOtp } from "../../application/usecases/generateOtp";
+import { sendOtpEmail } from "../../application/services/OtpService";
+import { FileUploadService } from "../../application/services/filesUpload";
+import { CouponRepository } from "../../infrastructure/repositories/CouponRepository";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -51,29 +62,41 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
+    console.log(email, password, "check");
 
     const userRepository = new UserRepository();
     const loginUserUseCase = new LoginUser(userRepository);
 
-    const { user, token } = await loginUserUseCase.execute(email, password);
+    const { user, accessToken, refreshToken } = await loginUserUseCase.execute(
+      email,
+      password
+    );
+    console.log(accessToken, "starting time accesstoken");
 
-    res.cookie("authToken", token, {
+    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      path: "/refresh",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       secure: process.env.NODE_ENV === "production",
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
     });
 
-    res.setHeader("Authorization", `Bearer ${token}`);
-
-    console.log(token);
     sendResponseJson(res, HttpStatus.OK, "Login successful", true, {
-      jwt_token: token,
+      jwt_token: accessToken,
       role: user.role,
+      user,
     });
   } catch (error: any) {
-    sendResponseJson(res, HttpStatus.UNAUTHORIZED, error.message, false);
+    sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
   }
 };
+
 export const getProfile = async (
   req: Request,
   res: Response
@@ -198,89 +221,59 @@ export const logout = (req: Request, res: Response) => {
   sendResponseJson(res, HttpStatus.OK, "Logout successful", true);
 };
 
-import jwt from "jsonwebtoken";
-import User from "../../infrastructure/database/userSchema";
-import { configJwt } from "../../config/ConfigSetup";
-import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
-import { GenerateOtp } from "../../application/usecases/generateOtp";
-import { sendOtpEmail } from "../../application/services/OtpService";
-import { FileUploadService } from "../../application/services/filesUpload";
-import { CouponRepository } from "../../infrastructure/repositories/CouponRepository";
-
 export const googleAuth = async (req: Request, res: Response): Promise<any> => {
   try {
     const { idToken } = req.body;
     console.log("Received ID Token:", idToken);
-
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    console.log("Decoded Token:", decodedToken);
-
-    const { email, name, uid, picture } = decodedToken;
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      const userData: {
-        name: string;
-        email: string | undefined;
-        googleId: string;
-        isVerified: boolean;
-        profile?: string;
-      } = {
-        name,
-        email,
-        googleId: uid,
-        isVerified: true,
-      };
-
-      if (picture) {
-        userData.profile = picture;
-      }
-
-      user = new User(userData);
-      await user.save();
-
-      console.log("User created successfully. Proceeding to role selection.");
-
+    const userRepo = new UserRepository();
+    const googleAuthUsecase = new GoogleAuth(userRepo);
+    const { user, isNewUser, accessToken, refreshToken } =
+      await googleAuthUsecase.execute(idToken);
+    if (!isNewUser) {
+      console.log("User:", user);
+      res.setHeader("Authorization", `Bearer ${accessToken}`);
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        path: "/refresh",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        secure: process.env.NODE_ENV === "production",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      });
       return sendResponseJson(
         res,
         HttpStatus.OK,
         "User created successfully",
         true,
         {
-          message: "User registered. Please select a role.",
-          newUser: true,
+          isNewUser,
+          userId: user._id,
+          email: user.email,
+          role: user.role,
+          jwt_token: accessToken,
+          user,
+        }
+      );
+    } else {
+      return sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "User created successfully. Proceeding to role selection.",
+        true,
+        {
+          isNewUser,
           userId: user._id,
           email: user.email,
         }
       );
     }
-
-    const jwt_secret: any = configJwt.jwtSecret;
-
-    const token = jwt.sign({ id: user._id, role: user.role }, jwt_secret, {
-      expiresIn: "1d",
-    });
-
-    res.cookie("authToken", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
-    });
-
-    console.log("Cookies set successfully.");
-    res.setHeader("Authorization", `Bearer ${token}`);
-    console.log("------------------- email", user.email);
-    // Respond with login success
-    return sendResponseJson(res, HttpStatus.OK, "Login successful", true, {
-      newUser: false,
-      jwt_token: token,
-      role: user.role,
-      email: user.email,
-      user,
-    });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    return res.status(500).json({ message: "Authentication failed" });
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      error.message,
+      false
+    );
   }
 };
 
@@ -290,39 +283,32 @@ export const roleSelection = async (
 ): Promise<any> => {
   const { role, userId } = req.body;
   if (!role || !userId) {
-    return res.status(400).json({
-      success: false,
-      message: "Role and email are required",
-    });
+    return sendResponseJson(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Role and User ID are required",
+      false
+    );
   }
 
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    user.role = role;
-    await user.save();
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      configJwt.jwtSecret!,
-      { expiresIn: "1h" }
+    const userRepository = new UserRepository();
+    const setRoleuseCase = new setRole(userRepository);
+    const { user, accessToken, refreshToken } = await setRoleuseCase.execute(
+      userId,
+      role
     );
-    res.cookie("authToken", token, {
+    res.setHeader("Authorization", `Bearer ${accessToken}`);
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
+      path: "/refresh",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       secure: process.env.NODE_ENV === "production",
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
     });
-    console.log("cookies also set simultaneously");
-    res.setHeader("Authorization", `Bearer ${token}`);
 
-    sendResponseJson(res, HttpStatus.OK, "Role set successfully", true, {
-      jwt_token: token,
+    return sendResponseJson(res, HttpStatus.OK, "Role set successfully", true, {
+      jwt_token: accessToken,
       role: user.role,
       email: user.email,
     });

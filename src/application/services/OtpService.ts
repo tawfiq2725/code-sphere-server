@@ -1,12 +1,11 @@
 import nodemailer from "nodemailer";
 import { configBrevo } from "../../config/ConfigSetup";
 export const transporter = nodemailer.createTransport({
-  host: configBrevo.BREVO.SMTP_SERVER,
-  port: configBrevo.BREVO.PORT,
+  service: "gmail",
   secure: false,
   auth: {
     user: configBrevo.BREVO.LOGIN,
-    pass: configBrevo.BREVO.PASSWORD,
+    pass: process.env.APP_PASSWORD,
   },
 });
 

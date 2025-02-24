@@ -8,16 +8,15 @@ import {
   verifyMembershipOrder,
   verifyOrder,
 } from "../../presentation/controllers/orderCtrl";
-import { authenticate } from "../../presentation/middleware/auth";
 
 const router = express.Router();
 
-router.post("/create-order", authenticate, createOrder);
-router.post("/verify-order", authenticate, verifyOrder);
-router.get("/get-user-orders/:userId", authenticate, getOrderByUserId);
+router.post("/create-order", createOrder);
+router.post("/verify-order", verifyOrder);
+router.get("/get-user-orders/:userId", getOrderByUserId);
 router.get("/get-all-orders", getAllOrders);
 router.get("/get-all-orders/:id", getOrderById);
 
-router.post("/membership/create-order", authenticate, createMembershipOrder);
-router.post("/membership/verify-order", authenticate, verifyMembershipOrder);
+router.post("/membership/create-order", createMembershipOrder);
+router.post("/membership/verify-order", verifyMembershipOrder);
 export default router;

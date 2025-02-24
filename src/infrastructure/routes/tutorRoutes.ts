@@ -4,23 +4,19 @@ import {
   enrollStudents,
   updateProfile,
 } from "../../presentation/controllers/tutorCtrl";
-import { authenticate } from "../../presentation/middleware/auth";
 import { getProfile } from "../../presentation/controllers/userController";
 import { upload } from "../../config/multerConfig";
+import { verifyToken } from "../../presentation/middleware/auth";
 const router = express.Router();
 
-router.get("/profile", authenticate, getProfile);
+router.use(verifyToken(["tutor"]));
+router.get("/profile", getProfile);
 const multerFields = [
   { name: "profileImage", maxCount: 1 },
   { name: "certificates", maxCount: 10 },
 ];
-router.patch(
-  "/profile",
-  authenticate,
-  upload.fields(multerFields),
-  updateProfile
-);
-router.get("/enroll-students/:id", authenticate, enrollStudents);
+router.patch("/profile", upload.fields(multerFields), updateProfile);
+router.get("/enroll-students/:id", enrollStudents);
 router.post(
   "/api/approve-certificate",
 

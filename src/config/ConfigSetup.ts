@@ -3,10 +3,9 @@ config();
 
 export const configBrevo = {
   BREVO: {
-    SMTP_SERVER: process.env.BREVO_SMTP_SERVER || "",
-    PORT: parseInt(process.env.BREVO_PORT || "587", 10),
+    SMTP_SERVER: "smtp.gmail.com",
     LOGIN: process.env.EMAIL_FROM || "",
-    PASSWORD: process.env.BREVO_PASSWORD || "",
+    PASSWORD: process.env.APP_PASSWORD || "",
   },
   EMAIL_FROM: process.env.EMAIL_FROM || "no-reply@example.com",
 };

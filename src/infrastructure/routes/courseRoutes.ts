@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate } from "../../presentation/middleware/auth";
+// import  } from "../../presentation/middleware/auth";
 import {
   CourseCreate,
   GetallCourses,
@@ -31,32 +31,21 @@ import {
 import { updateCourseProgress } from "../../presentation/controllers/courseCtrlProgres";
 const router = express.Router();
 
-router.post(
-  "/add-course",
-  authenticate,
-  upload.single("thumbnail"),
-  CourseCreate
-);
-router.get("/get-courses/:id", authenticate, GetallCourses);
+router.post("/add-course", upload.single("thumbnail"), CourseCreate);
+router.get("/get-courses/:id", GetallCourses);
 
 router.get("/get-course-data", GetallCourse);
 router.get("/get-course/:courseId", GetcourseByGenerateId);
-router.patch(
-  "/edit-course/:courseId",
-  upload.single("thumbnail"),
-  authenticate,
-  EditCourse
-);
-router.delete("/delete-course/:courseId", authenticate, deleteCourse);
-router.patch("/toggle-visibility/:courseId", authenticate, toggleVisiblity);
+router.patch("/edit-course/:courseId", upload.single("thumbnail"), EditCourse);
+router.delete("/delete-course/:courseId", deleteCourse);
+router.patch("/toggle-visibility/:courseId", toggleVisiblity);
 
 // Chapters
-router.post("/add-chapter", authenticate, upload.single("video"), addChapter);
-router.get("/get-chapters/:courseId", authenticate, getChapter);
+router.post("/add-chapter", upload.single("video"), addChapter);
+router.get("/get-chapters/:courseId", getChapter);
 router.patch(
   "/update-chapter/:chapterId",
   upload.single("video"),
-  authenticate,
   updateChapter
 );
 
@@ -70,15 +59,11 @@ router.patch("/coupon/toggle/:id", toggleCoupon);
 router.get("/get-chapter-front/:courseId", getChapter);
 
 // Categories
-router.post("/add-category", authenticate, addCategory);
-router.get("/get-categories", authenticate, getAllCategory);
-router.patch("/update-category/:id", authenticate, updateCategory);
-router.patch(
-  "/chapter/toggle-visibility/:id",
-  authenticate,
-  toggleVisiblityCategory
-);
-router.patch(`/update-progress`, authenticate, updateCourseProgress);
+router.post("/add-category", addCategory);
+router.get("/get-categories", getAllCategory);
+router.patch("/update-category/:id", updateCategory);
+router.patch("/chapter/toggle-visibility/:id", toggleVisiblityCategory);
+router.patch(`/update-progress`, updateCourseProgress);
 
 // not auth
 router.get("/get-category/:id", getCategory);

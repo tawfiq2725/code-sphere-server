@@ -11,7 +11,7 @@ import {
   toggleCourse,
   approveOrRejectCourse,
 } from "../../presentation/controllers/getAllusers";
-import { authenticate } from "../../presentation/middleware/auth";
+// import { authenticate } from "../../presentation/middleware/auth";
 import { getTutorCertificates } from "../../presentation/controllers/tutorCtrl";
 import {
   createMembership,
@@ -21,33 +21,28 @@ import {
   toggleMembershipStatus,
   updateMembership,
 } from "../../presentation/controllers/membershipCtrl";
+import { verifyToken } from "../../presentation/middleware/auth";
+
 const router = express.Router();
 
-router.get("/get-users", authenticate, getAllUsersList);
-router.patch("/block-user/:id", authenticate, BlockUser);
-router.patch("/unblock-user/:id", authenticate, UnblockUser);
-router.get("/get-tutors", authenticate, getAllTutorList);
-router.get(
-  "/get-tutors/applications",
-  authenticate,
-  getAllTutorListApplication
-);
-router.patch("/approve-tutor/:tutorId", authenticate, approveTutor);
-router.patch("/disapprove-tutor/:tutorId", authenticate, disapproveTutor);
-router.get("/tutor/certificates/:id", authenticate, getTutorCertificates);
-router.get("/get-courses", authenticate, GetallCoursesAdmin);
-router.patch("/toggle-course/:id", authenticate, toggleCourse);
-router.patch(
-  "/api/approve-or-reject-course/:courseId",
-  authenticate,
-  approveOrRejectCourse
-);
+router.use(verifyToken(["admin"]));
+router.get("/get-users", getAllUsersList);
+router.patch("/block-user/:id", BlockUser);
+router.patch("/unblock-user/:id", UnblockUser);
+router.get("/get-tutors", getAllTutorList);
+router.get("/get-tutors/applications", getAllTutorListApplication);
+router.patch("/approve-tutor/:tutorId", approveTutor);
+router.patch("/disapprove-tutor/:tutorId", disapproveTutor);
+router.get("/tutor/certificates/:id", getTutorCertificates);
+router.get("/get-courses", GetallCoursesAdmin);
+router.patch("/toggle-course/:id", toggleCourse);
+router.patch("/api/approve-or-reject-course/:courseId", approveOrRejectCourse);
 
-router.post("/add-membership", authenticate, createMembership);
-router.patch("/edit-membership/:id", authenticate, updateMembership);
-router.patch("/toggle-membership/:id", authenticate, toggleMembershipStatus);
-router.get("/get-memberships", authenticate, getAllMemberships);
-router.get("/get-memberships/orders", authenticate, getAllMembershipOrders);
-router.get("/get-memberships/orders/:id", authenticate, getMembershipOrderById);
+router.post("/add-membership", createMembership);
+router.patch("/edit-membership/:id", updateMembership);
+router.patch("/toggle-membership/:id", toggleMembershipStatus);
+router.get("/get-memberships", getAllMemberships);
+router.get("/get-memberships/orders", getAllMembershipOrders);
+router.get("/get-memberships/orders/:id", getMembershipOrderById);
 
 export default router;

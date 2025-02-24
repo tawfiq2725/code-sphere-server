@@ -7,12 +7,11 @@ import {
   getRevenueData,
   getToptutors,
 } from "../../presentation/controllers/reportCtrl";
-import { authenticate } from "../../presentation/middleware/auth";
 
 const router = express.Router();
 
 router.get("/get-reports/orders", getReportsOrders);
-router.get("/admin/dashboard", authenticate, adminDashboards);
+router.get("/admin/dashboard", adminDashboards);
 router.get("/revenue", getRevenueData);
 router.get("/enrollments", getCourseEnrollments);
 router.get("/get-toptutors", getToptutors);
