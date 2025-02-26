@@ -191,11 +191,13 @@ export class UserRepository implements UserInterface {
   }
 
   public async getTutors(studentId: string): Promise<Person[]> {
+    // 1. Retrieve the student document by ID.
     const student = await UserModel.findById(studentId);
     if (!student) {
       throw new Error("Student not found");
     }
 
+    // 2. Extract courseIds from the student's courseProgress array.
     const courseIds = student.courseProgress
       ? student.courseProgress.map((item) => item.courseId)
       : [];
@@ -207,54 +209,21 @@ export class UserRepository implements UserInterface {
       role: "tutor",
     });
 
-    const tutorsWithUnread = await Promise.all(
-      tutors.map(async (tutorDoc) => {
-        const tutor = this.maptoEntity(tutorDoc);
-        const chat = await ChatModel.findOne({
-          tutorId: tutorDoc._id,
-          userId: studentId,
-        });
-        const unreadCount = chat
-          ? chat.messages.filter((msg) => msg.sender === "tutor" && !msg.read)
-              .length
-          : 0;
-        return Object.assign(tutor, { unreadCount });
-      })
-    );
-
-    return tutorsWithUnread;
+    return tutors.map((tutor) => this.maptoEntity(tutor));
   }
-  public async getUsers(tutorId: string): Promise<Person[]> {
-    // 1. Get tutor's courses
+  public async getUsers(tutorId: string): Promise<any[]> {
     const courses = await Course.find({ tutorId });
-    if (!courses.length) return [];
 
-    // 2. Extract course IDs and find enrolled students
+    if (!courses || courses.length === 0) {
+      return [];
+    }
     const tutorCourseIds = courses.map((course: ICourse) => course.courseId);
-    const studentDocs = await UserModel.find({
+
+    const students = await UserModel.find({
       role: "student",
       courseProgress: { $elemMatch: { courseId: { $in: tutorCourseIds } } },
     });
 
-    // 3. Calculate unread messages from students (by checking each message’s read flag)
-    const studentsWithUnread = await Promise.all(
-      studentDocs.map(async (studentDoc) => {
-        const student = this.maptoEntity(studentDoc);
-        const chat = await ChatModel.findOne({
-          tutorId,
-          userId: studentDoc._id,
-        });
-
-        // Count unread messages sent by the student
-        const unreadCount = chat
-          ? chat.messages.filter((msg) => msg.sender === "student" && !msg.read)
-              .length
-          : 0;
-
-        return Object.assign(student, { unreadCount });
-      })
-    );
-
-    return studentsWithUnread;
+    return students.map((student: UserDocument) => this.maptoEntity(student));
   }
 }

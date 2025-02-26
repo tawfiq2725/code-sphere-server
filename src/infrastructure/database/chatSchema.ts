@@ -1,11 +1,13 @@
 import mongoose, { Document, Schema, model } from "mongoose";
 
-export interface IMessage extends Document {
+interface IMessage extends Document {
   sender: "student" | "tutor";
   message: string;
   type: "img" | "txt";
   deleted: boolean;
   read: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface IChat extends Document {
@@ -14,6 +16,7 @@ interface IChat extends Document {
   userId: mongoose.Schema.Types.ObjectId;
   messages: IMessage[];
 }
+
 // Create message schema
 const messageSchema = new Schema<IMessage>(
   {

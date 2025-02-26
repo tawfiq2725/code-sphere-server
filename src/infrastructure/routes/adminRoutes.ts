@@ -26,6 +26,7 @@ import { verifyToken } from "../../presentation/middleware/auth";
 const router = express.Router();
 
 router.use(verifyToken(["admin"]));
+
 router.get("/get-users", getAllUsersList);
 router.patch("/block-user/:id", BlockUser);
 router.patch("/unblock-user/:id", UnblockUser);
