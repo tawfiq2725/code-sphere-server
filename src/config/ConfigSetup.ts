@@ -14,3 +14,10 @@ export const configJwt = {
   jwtSecret: process.env.JWT_SECRET || "secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "refreshSecret",
 };
+
+export const configFrontend = {
+  frontendUrl:
+    process.env.NODE_ENV === "production"
+      ? process.env.FRONTEND_URL_PRODUCTION
+      : process.env.FRONTEND_URL_DEVELOPMENT,
+};

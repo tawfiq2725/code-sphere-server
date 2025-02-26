@@ -128,3 +128,21 @@ export class setRole {
     return { user: userData, accessToken, refreshToken };
   }
 }
+
+export class getTutorUsecasae {
+  constructor(private userRepository: UserInterface) {}
+
+  public async execute(id: string): Promise<Person[]> {
+    const tutors = await this.userRepository.getTutors(id);
+    return tutors;
+  }
+}
+
+export class getStudentsUsecase {
+  constructor(private userRepository: UserInterface) {}
+
+  public async execute(id: string): Promise<Person[]> {
+    const students = await this.userRepository.getUsers(id);
+    return students;
+  }
+}

@@ -2,6 +2,7 @@ import express from "express";
 import {
   approveCourseCertificate,
   enrollStudents,
+  getStudents,
   updateProfile,
 } from "../../presentation/controllers/tutorCtrl";
 import { getProfile } from "../../presentation/controllers/userController";
@@ -23,4 +24,6 @@ router.post(
   upload.single("pdf"),
   approveCourseCertificate
 );
+
+router.get("/get-students/:id", getStudents);
 export default router;

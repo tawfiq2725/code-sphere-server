@@ -3,6 +3,7 @@ import { Person } from "../../domain/entities/User";
 import { CreateUser } from "../../application/usecases/CreateUser";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 import {
+  getTutorUsecasae,
   GoogleAuth,
   LoginUser,
   setRole,
@@ -12,9 +13,6 @@ import HttpStatus from "../../utils/statusCodes";
 import UserS from "../../infrastructure/database/userSchema";
 import bcrypt from "bcryptjs";
 import { IUsedBy } from "../../infrastructure/database/CouponSchema";
-import jwt from "jsonwebtoken";
-import User from "../../infrastructure/database/userSchema";
-import { configJwt } from "../../config/ConfigSetup";
 import { OtpRepositoryImpl } from "../../infrastructure/repositories/OtpRepository";
 import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { sendOtpEmail } from "../../application/services/OtpService";
@@ -497,6 +495,18 @@ export const verifyCoupon = async (req: Request, res: Response) => {
       true,
       coupon
     );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const getTutor = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userRepo = new UserRepository();
+    const tutorUsecase = new getTutorUsecasae(userRepo);
+    const tutors = await tutorUsecase.execute(id);
+    return sendResponseJson(res, HttpStatus.OK, "Tutors fetched", true, tutors);
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }

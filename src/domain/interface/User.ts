@@ -17,4 +17,6 @@ export interface UserInterface {
   approveCertificate(data: any): Promise<Person | null>;
   googleAuthLogin(userData: any): Promise<{ user: any; isNewUser: boolean }>;
   setRole(userId: string, role: string): Promise<Person | null>;
+  getTutors(id: string): Promise<Person[]>;
+  getUsers(tutorId: string): Promise<Person[]>;
 }

@@ -4,6 +4,7 @@ import {
   createUser,
   generateOtpHandlerF,
   getProfile,
+  getTutor,
   getUserById,
   googleAuth,
   loginUser,
@@ -65,5 +66,6 @@ router.get("/get-membership/category/courses/:id", getCoursesByMembershipId);
 router.get("/get-certifcates/:id", getCertificatesByStudent);
 // coupon apply
 router.post("/api/verify-coupon", verifyCoupon);
+router.get("/student/tutor/:id", getTutor);
 
 export default router;

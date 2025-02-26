@@ -7,6 +7,7 @@ import HttpStatus from "../../utils/statusCodes";
 import { UpdateProfileService } from "../../application/services/updateProfile";
 import { approveCertificateUsecase } from "../../application/usecases/userLists";
 import { FileUploadService } from "../../application/services/filesUpload";
+import { getStudentsUsecase } from "../../application/usecases/loginUser";
 
 export const updateProfile = async (
   req: Request,
@@ -128,6 +129,18 @@ export const approveCourseCertificate = async (req: Request, res: Response) => {
       true,
       result
     );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const getStudents = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const repo = new UserRepository();
+    const getUserusecase = new getStudentsUsecase(repo);
+    const students = await getUserusecase.execute(id);
+    return sendResponseJson(res, HttpStatus.OK, "Students", true, students);
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
