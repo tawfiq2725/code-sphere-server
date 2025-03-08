@@ -1,4 +1,5 @@
 import OrderS from "../database/orderSchema";
+import MembershipOrder from "../database/order-mSchema";
 import { Order } from "../../domain/entities/Order";
 import { ReportInterface } from "../../domain/interface/Report";
 import userSchema from "../database/userSchema";
@@ -29,7 +30,10 @@ export class ReportsRepository implements ReportInterface {
     const totalTutors = await userSchema
       .find({ role: "tutor" })
       .countDocuments();
-    const totalOrders = await OrderS.find({
+    const totalOrder = await OrderS.find({
+      orderStatus: "success",
+    }).countDocuments();
+    const totalMemberships = await MembershipOrder.find({
       orderStatus: "success",
     }).countDocuments();
     const totalCourses = await Course.find({
@@ -53,9 +57,27 @@ export class ReportsRepository implements ReportInterface {
         },
       },
     ]);
+    const totalMembershipsRevenue = await MembershipOrder.aggregate([
+      {
+        $match: {
+          orderStatus: "success",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $convert: { input: "$totalAmount", to: "double", onError: 0 },
+            },
+          },
+        },
+      },
+    ]);
     const totalRevenue =
-      totalRevenueResult.length > 0 ? totalRevenueResult[0].total : 0;
-
+      (totalRevenueResult[0]?.total || 0) +
+      (totalMembershipsRevenue[0]?.total || 0);
+    const totalOrders = totalOrder + totalMemberships;
     return {
       totalUsers,
       totalTutors,
@@ -197,5 +219,118 @@ export class ReportsRepository implements ReportInterface {
   }
   public async topCourses(): Promise<any> {
     return await OrderS.find();
+  }
+  public async getMembershipReports(
+    startDate: Date,
+    endDate: Date
+  ): Promise<any> {
+    return await MembershipOrder.find({
+      createdAt: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    });
+  }
+  public async getTutorDashboard(tutorId: string): Promise<any> {
+    // 1. Get all courses for this tutor that are approved
+    const courses = await Course.find({ tutorId, courseStatus: "approved" });
+    const courseIds = courses.map((course: any) => course.courseId);
+
+    // 2. Count total courses
+    const totalCourses = courses.length;
+
+    // 3. Get order data for these courses
+    const totalEnrollments = await OrderS.find({
+      courseId: { $in: courseIds },
+      orderStatus: "success",
+    }).countDocuments();
+
+    // 4. Get unique students enrolled in these courses
+    const uniqueStudentsAgg = await OrderS.aggregate([
+      { $match: { courseId: { $in: courseIds }, orderStatus: "success" } },
+      { $group: { _id: "$userId" } },
+      { $count: "totalStudents" },
+    ]);
+    const totalStudents =
+      uniqueStudentsAgg.length > 0 ? uniqueStudentsAgg[0].totalStudents : 0;
+
+    // 5. Calculate total revenue from these orders
+    const revenueAgg = await OrderS.aggregate([
+      {
+        $match: { courseId: { $in: courseIds }, orderStatus: "success" },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: {
+              $convert: {
+                input: "$totalAmount",
+                to: "double",
+                onError: 0,
+              },
+            },
+          },
+        },
+      },
+    ]);
+    const totalRevenue = revenueAgg[0]?.totalRevenue || 0;
+
+    // 6. Get student progress for the tutor’s courses (from userSchema)
+    const progressAgg = await userSchema.aggregate([
+      { $match: { "courseProgress.courseId": { $in: courseIds } } },
+      { $unwind: "$courseProgress" },
+      { $match: { "courseProgress.courseId": { $in: courseIds } } },
+      {
+        $group: {
+          _id: null,
+          avgProgress: { $avg: "$courseProgress.progress" },
+          totalEnrolled: { $sum: 1 },
+          completedCourses: {
+            $sum: {
+              $cond: [{ $eq: ["$courseProgress.progress", 100] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+    let avgProgress = 0,
+      enrolledCount = 0,
+      completedCount = 0;
+    if (progressAgg && progressAgg.length > 0) {
+      avgProgress = progressAgg[0].avgProgress;
+      enrolledCount = progressAgg[0].totalEnrolled;
+      completedCount = progressAgg[0].completedCourses;
+    }
+    const completionRate =
+      enrolledCount > 0 ? (completedCount / enrolledCount) * 100 : 0;
+
+    // 7. Get enrollment trend data (group orders by day)
+    const enrollmentTrendAgg = await OrderS.aggregate([
+      {
+        $match: { courseId: { $in: courseIds }, orderStatus: "success" },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    return {
+      totalCourses,
+      totalEnrollments,
+      totalStudents,
+      totalRevenue,
+      avgProgress,
+      enrolledCount,
+      completedCount,
+      completionRate,
+      enrollmentTrend: enrollmentTrendAgg,
+    };
   }
 }

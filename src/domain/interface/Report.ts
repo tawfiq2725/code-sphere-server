@@ -11,4 +11,6 @@ export interface ReportInterface {
   tutorDashboards(): Promise<any>;
   topCourses(): Promise<any>;
   topTutors(): Promise<any>;
+  getMembershipReports(startDate: Date, endDate: Date): Promise<any>;
+  getTutorDashboard(tutorId: string): Promise<any>;
 }

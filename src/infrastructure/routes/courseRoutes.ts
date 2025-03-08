@@ -29,12 +29,16 @@ import {
   updateCoupon,
 } from "../../presentation/controllers/couponCtrl";
 import { updateCourseProgress } from "../../presentation/controllers/courseCtrlProgres";
+import { verifyToken } from "../../presentation/middleware/auth";
 const router = express.Router();
 
-router.post("/add-course", upload.single("thumbnail"), CourseCreate);
 router.get("/get-courses/:id", GetallCourses);
-
 router.get("/get-course-data", GetallCourse);
+router.get("/get-category/:id", getCategory);
+router.get("/get-category-all", getAllCategory);
+router.use(verifyToken(["admin", "student", "tutor"]));
+
+router.post("/add-course", upload.single("thumbnail"), CourseCreate);
 router.get("/get-course/:courseId", GetcourseByGenerateId);
 router.patch("/edit-course/:courseId", upload.single("thumbnail"), EditCourse);
 router.delete("/delete-course/:courseId", deleteCourse);
@@ -65,7 +69,4 @@ router.patch("/update-category/:id", updateCategory);
 router.patch("/chapter/toggle-visibility/:id", toggleVisiblityCategory);
 router.patch(`/update-progress`, updateCourseProgress);
 
-// not auth
-router.get("/get-category/:id", getCategory);
-router.get("/get-category-all", getAllCategory);
 export default router;

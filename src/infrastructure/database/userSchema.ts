@@ -8,10 +8,8 @@ export interface CourseProgress {
 }
 
 export interface MembershipInfo {
-  categoryId: string;
-  startDate: Date;
-  endDate: Date;
-  status: "active" | "expired" | "inactive";
+  categoryId: string[]; // Ensure this is an array of strings
+  plan: "Basic" | "Standard" | "Premium";
 }
 
 export interface UserCertificate {
@@ -28,6 +26,7 @@ export interface UserDocument extends Document {
   password: string;
   role?: "student" | "tutor" | "admin";
   _id: string;
+
   isVerified: boolean;
   isAdmin: boolean;
   isBlocked: boolean;
@@ -58,7 +57,6 @@ const UserSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      required: false,
     },
     role: {
       type: String,
@@ -79,7 +77,6 @@ const UserSchema: Schema = new Schema(
     },
     googleId: {
       type: String,
-      required: false,
     },
     isTutor: {
       type: Boolean,
@@ -87,33 +84,26 @@ const UserSchema: Schema = new Schema(
     },
     qualification: {
       type: String,
-      required: false,
     },
     experience: {
       type: Number,
-      required: false,
     },
     subjects: {
       type: [String],
-      required: false,
     },
     certificates: {
       type: [String],
-      required: false,
     },
     tutorStatus: {
       type: String,
       default: "pending",
       enum: ["pending", "approved", "rejected"],
-      required: false,
     },
     profile: {
       type: String,
-      required: false,
     },
     bio: {
       type: String,
-      required: false,
     },
     courseProgress: {
       type: [
@@ -127,10 +117,13 @@ const UserSchema: Schema = new Schema(
       default: [],
     },
     membership: {
-      categoryId: { type: String },
-      startDate: { type: Date },
-      endDate: { type: Date },
-      status: { type: String, enum: ["active", "expired", "inactive"] },
+      categoryId: {
+        type: [String],
+      },
+      plan: {
+        type: String,
+        enum: ["Basic", "Standard", "Premium"],
+      },
     },
     CourseCertificate: {
       type: [
@@ -141,17 +134,15 @@ const UserSchema: Schema = new Schema(
             enum: ["approved", "unavailable"],
             default: "unavailable",
           },
-          certificateUrl: { type: String, required: false },
-          issuedDate: { type: Date, required: false },
-          approvedBy: { type: String, required: false },
+          certificateUrl: { type: String },
+          issuedDate: { type: Date },
+          approvedBy: { type: String },
         },
       ],
       default: [],
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 export default mongoose.model<UserDocument>("User", UserSchema);

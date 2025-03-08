@@ -14,6 +14,7 @@ interface MulterRequest extends Request {
 }
 
 import User from "../../infrastructure/database/userSchema"; // Import User model
+import { getUrl } from "../../utils/getUrl";
 
 export const addChapter = async (
   req: MulterRequest,
@@ -114,6 +115,9 @@ export const getChapter = async (req: Request, res: Response) => {
         false
       );
     }
+    for (let chapter of chapters) {
+      chapter.video = await getUrl(chapter.video);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -156,4 +160,3 @@ export const updateChapter = async (req: Request, res: Response) => {
     true
   );
 };
-export const deleteChapter = async (req: Request, res: Response) => {};

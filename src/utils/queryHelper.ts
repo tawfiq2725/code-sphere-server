@@ -5,7 +5,9 @@ export interface PaginationOptions {
   limit?: number;
   search?: string;
   category?: string;
+  populate?: string | string[]; // Added populate property
 }
+
 export const paginate = async <T>(
   model: Model<T>,
   options: PaginationOptions,
@@ -36,7 +38,14 @@ export const paginate = async <T>(
     query.category = options.category;
   }
 
-  const dataPromise = model.find(query).skip(skip).limit(limit);
+  let dataQuery = model.find(query).skip(skip).limit(limit);
+
+  // If populate is provided in options, use it
+  if (options.populate) {
+    dataQuery = dataQuery.populate(options.populate);
+  }
+
+  const dataPromise = dataQuery;
   const countPromise = model.countDocuments(query);
 
   const [data, total] = await Promise.all([dataPromise, countPromise]);

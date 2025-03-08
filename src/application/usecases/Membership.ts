@@ -10,10 +10,10 @@ export class CreateMembership {
       membershipData.membershipId,
       membershipData.membershipName,
       membershipData.membershipDescription,
+      membershipData.membershipPlan,
       membershipData.price,
       membershipData.label,
-      membershipData.status,
-      membershipData.duration
+      membershipData.status
     );
     return this.membershipRepository.createMembership(newMembership);
   }

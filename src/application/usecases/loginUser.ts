@@ -8,6 +8,10 @@ import {
   generateRefreshToken,
   TokenPayload,
 } from "../../utils/tokenUtility";
+import { AwsConfig } from "../../config/awsConfig";
+import { FileUploadService } from "../services/filesUpload";
+import { Course } from "../../domain/entities/Course";
+import { getUrl } from "../../utils/getUrl";
 
 export class LoginUser {
   constructor(private userRepository: UserInterface) {}
@@ -33,7 +37,6 @@ export class LoginUser {
     if (!isPasswordValid) {
       throw new Error("Invalid password");
     }
-
     const payload: TokenPayload = {
       id: user._id || "",
       email: user.email,
@@ -43,7 +46,17 @@ export class LoginUser {
     const refreshToken = generateRefreshToken(payload);
     console.log("accessToken", accessToken);
     console.log("refreshToken", refreshToken);
-
+    console.log("user profile ", user.profile);
+    if (user.profile) {
+      const fileName = user.profile.split("/").pop()!;
+      const folder = user.profile.substring(
+        0,
+        user.profile.lastIndexOf("/") + 1
+      );
+      const aws = new FileUploadService();
+      const presignedUrl = await aws.getPresignedUrl(fileName, folder);
+      user.profile = presignedUrl;
+    }
     return { user, accessToken, refreshToken };
   }
 }
@@ -134,6 +147,18 @@ export class getTutorUsecasae {
 
   public async execute(id: string): Promise<Person[]> {
     const tutors = await this.userRepository.getTutors(id);
+    for (let tutor of tutors) {
+      if (tutor.profile) {
+        const fileName = tutor.profile.split("/").pop()!;
+        const folder = tutor.profile.substring(
+          0,
+          tutor.profile.lastIndexOf("/") + 1
+        );
+        const aws = new FileUploadService();
+        const presignedUrl = await aws.getPresignedUrl(fileName, folder);
+        tutor.profile = presignedUrl;
+      }
+    }
     return tutors;
   }
 }
@@ -143,6 +168,74 @@ export class getStudentsUsecase {
 
   public async execute(id: string): Promise<Person[]> {
     const students = await this.userRepository.getUsers(id);
+    for (let student of students) {
+      if (student.profile) {
+        const fileName = student.profile.split("/").pop()!;
+        const folder = student.profile.substring(
+          0,
+          student.profile.lastIndexOf("/") + 1
+        );
+        const aws = new FileUploadService();
+        const presignedUrl = await aws.getPresignedUrl(fileName, folder);
+        student.profile = presignedUrl;
+      }
+    }
+
     return students;
+  }
+}
+export class getmyCoursesUsecase {
+  constructor(private userRepository: UserInterface) {}
+
+  public async execute(id: string): Promise<Course[]> {
+    const courses = await this.userRepository.myCourses(id);
+    for (let course of courses) {
+      if (course.thumbnail) {
+        const fileName = course.thumbnail.split("/").pop()!;
+        const folder = course.thumbnail.substring(
+          0,
+          course.thumbnail.lastIndexOf("/") + 1
+        );
+        const aws = new FileUploadService();
+        const presignedUrl = await aws.getPresignedUrl(fileName, folder);
+        course.thumbnail = presignedUrl;
+      }
+    }
+    return courses ? [courses] : [];
+  }
+}
+
+export class getProfileUsecase {
+  constructor(
+    private userRepository: UserInterface,
+    private awsgetFile: FileUploadService
+  ) {}
+  public async execute(email: string): Promise<Person> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    if (user.profile) {
+      const fileName = user.profile.split("/").pop()!;
+      const folder = user.profile.substring(
+        0,
+        user.profile.lastIndexOf("/") + 1
+      );
+      console.log(fileName);
+      console.log(folder);
+      const presignedUrl = await this.awsgetFile.getPresignedUrl(
+        fileName,
+        folder
+      );
+      user.profile = presignedUrl;
+    }
+
+    if (user.certificates) {
+      user.certificates = await Promise.all(
+        user.certificates.map((certificate) => getUrl(certificate))
+      );
+    }
+    console.log("user profile", user.profile);
+    return user;
   }
 }

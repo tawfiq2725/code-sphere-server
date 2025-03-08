@@ -9,21 +9,27 @@ import HttpStatus from "../../utils/statusCodes";
 import { MembershipOrderRepository } from "../../infrastructure/repositories/MembershipOrder";
 import { CourseRepositoryImpl } from "../../infrastructure/repositories/CourseRepository";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
+
 export const createMembership = async (req: Request, res: Response) => {
   try {
-    const { membershipName, membershipDescription, price, label, duration } =
-      req.body;
-
+    const {
+      membershipName,
+      membershipDescription,
+      membershipPlan,
+      label,
+      price,
+    } = req.body;
     const generateId = `MEMBER-${Math.floor(Math.random() * 1000)}`;
     const membershipData = {
       membershipId: generateId,
       membershipName,
       membershipDescription,
+      membershipPlan, // New field from updated schema
       price,
       label,
       status: true,
-      duration,
     };
+
     const membershipRepo = new MembershipRepository();
     const newMembership = new CreateMembership(membershipRepo);
     const membership = await newMembership.execute(membershipData);
@@ -35,14 +41,21 @@ export const createMembership = async (req: Request, res: Response) => {
       membership
     );
   } catch (err) {
-    console.log(err);
+    console.error(err);
+    return sendResponseJson(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Failed to create membership",
+      false
+    );
   }
 };
+
 export const updateMembership = async (req: Request, res: Response) => {
   try {
     const membershipRepo = new MembershipRepository();
     const { id } = req.params;
-    let existingMembership = await membershipRepo.findMembershipById(id);
+    const existingMembership = await membershipRepo.findMembershipById(id);
     if (!existingMembership) {
       return sendResponseJson(
         res,
@@ -51,10 +64,8 @@ export const updateMembership = async (req: Request, res: Response) => {
         false
       );
     }
-    const data = req.body;
 
     const updatedData = { ...req.body, membershipId: id };
-
     const membership = new updateMembershipUsecase(membershipRepo);
     const updates = await membership.execute(updatedData);
     return sendResponseJson(
@@ -65,10 +76,11 @@ export const updateMembership = async (req: Request, res: Response) => {
       updates
     );
   } catch (error: any) {
-    console.log(error);
+    console.error(error);
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
 };
+
 export const toggleMembershipStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
   const membershipRepo = new MembershipRepository();
@@ -85,6 +97,7 @@ export const toggleMembershipStatus = async (req: Request, res: Response) => {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
 };
+
 export const getAllMemberships = async (req: Request, res: Response) => {
   try {
     const membershipRepo = new MembershipRepository();
@@ -97,12 +110,13 @@ export const getAllMemberships = async (req: Request, res: Response) => {
       memberships
     );
   } catch (err: any) {
-    console.log(err);
+    console.error(err);
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, err.message, false);
   }
 };
 
-// user side
+// User side endpoints
+
 export const getMemberships = async (req: Request, res: Response) => {
   try {
     const membershipRepo = new MembershipRepository();
@@ -121,9 +135,37 @@ export const getMemberships = async (req: Request, res: Response) => {
 
 export const getMembershipById = async (req: Request, res: Response) => {
   try {
-    const membershipRepo = new MembershipOrderRepository();
+    const membershipRepo = new MembershipRepository();
     const { id } = req.params;
-    console.log;
+    const membership = await membershipRepo.findMembershipById(id);
+    if (!membership) {
+      return sendResponseJson(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Membership not found",
+        false
+      );
+    }
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Membership retrieved successfully",
+      true,
+      membership
+    );
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const getMembershipByOId = async (req: Request, res: Response) => {
+  try {
+    console.log("here 1");
+    const membershipRepo = new MembershipOrderRepository();
+    console.log("here 2");
+    const { id } = req.params;
+    console.log("here 3");
+    console.log(id);
     const membership = await membershipRepo.getMembershipOrderByUserId(id);
     if (!membership) {
       return sendResponseJson(
@@ -133,6 +175,7 @@ export const getMembershipById = async (req: Request, res: Response) => {
         false
       );
     }
+    console.log(membership);
     return sendResponseJson(
       res,
       HttpStatus.OK,

@@ -205,13 +205,22 @@ export const createMembershipOrder = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { amount, currency, userId, membershipId, categoryId } = req.body;
+    const {
+      amount,
+      currency,
+      userId,
+      membershipId,
+      categoryId,
+      membershipPlan,
+    } = req.body;
+
     const options = {
       amount: amount * 100,
       currency: currency,
       receipt: `receipt_order_${Math.floor(Math.random() * 1000)}`,
       payment_capture: 1,
     };
+
     const generateOrderId = `MEMBER${Date.now()
       .toString()
       .slice(-5)}${Math.floor(Math.random() * 10)}`;
@@ -221,16 +230,18 @@ export const createMembershipOrder = async (
       membershipId,
       userId,
       categoryId,
+      membershipPlan,
       totalAmount: amount,
       paymentStatus: "pending" as "pending",
       orderStatus: "pending" as "pending",
     };
-    const orderRepo = new MembershipOrderRepository();
 
+    const orderRepo = new MembershipOrderRepository();
     const orderUsecase = new MembershipOrderUsecase(orderRepo);
     await orderUsecase.execute(orderData);
-    console.log("finshed");
+
     const order = await razorPayInstance.orders.create(options);
+
     return sendResponseJson(res, HttpStatus.OK, "Order Initiated", true, {
       order,
       orderId: orderData.membershipOrderId,
@@ -261,16 +272,6 @@ export const verifyMembershipOrder = async (
       orderId
     );
     const { membershipId, userId, categoryId } = details;
-    console.log(membershipId, userId, categoryId, "whole data");
-    const repo = new MembershipRepository();
-    const membership = await repo.findMembershipByIdV2(membershipId);
-    console.log(membership, "membership details----------------------");
-    const timeline = membership?.duration || 0;
-    console.log(timeline, "membership timeline durations");
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + timeline);
-
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return sendResponseJson(
         res,
@@ -290,8 +291,6 @@ export const verifyMembershipOrder = async (
         paymentStatus: "success" as "success",
         orderStatus: "success" as "success",
         membershipStatus: "active" as "active",
-        membershipStartDate: startDate,
-        membershipEndDate: endDate,
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature,

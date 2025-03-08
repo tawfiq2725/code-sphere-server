@@ -1,7 +1,6 @@
 import { Membership } from "../../domain/entities/Membership";
 import { IMembershipRepository } from "../../domain/interface/Membership";
 import MemebershipModel from "../database/MembershipSchema";
-import { Types } from "mongoose";
 
 export class MembershipRepository implements IMembershipRepository {
   async createMembership(membership: Membership): Promise<Membership> {
@@ -36,9 +35,7 @@ export class MembershipRepository implements IMembershipRepository {
   }
 
   async findMembershipByUserId(userId: string): Promise<Membership | null> {
-    const membership = await MemebershipModel.findOne({
-      userId,
-    });
+    const membership = await MemebershipModel.findOne({ userId });
     return membership ? this.mapDocumentToEntity(membership) : null;
   }
 

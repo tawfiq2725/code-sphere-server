@@ -1,12 +1,13 @@
-import { Schema, Document, Types, ObjectId, model } from "mongoose";
-interface MembershipInterface extends Document {
+import { Schema, Document, model } from "mongoose";
+
+export interface MembershipInterface extends Document {
   membershipId: string;
   membershipName: string;
-  membershipDescription: string[];
+  membershipDescription: string;
+  membershipPlan: "Basic" | "Standard" | "Premium";
   price: number;
   label: string;
   status: boolean;
-  duration: number;
 }
 
 const MembershipSchema = new Schema<MembershipInterface>(
@@ -20,13 +21,16 @@ const MembershipSchema = new Schema<MembershipInterface>(
       required: true,
     },
     membershipDescription: {
-      type: [String],
+      type: String,
       required: true,
     },
-
+    membershipPlan: {
+      type: String,
+      enum: ["Basic", "Standard", "Premium"],
+      required: true,
+    },
     price: {
       type: Number,
-      required: false,
     },
     label: {
       type: String,
@@ -34,18 +38,12 @@ const MembershipSchema = new Schema<MembershipInterface>(
     },
     status: {
       type: Boolean,
-      required: true,
       default: false,
-    },
-    duration: {
-      type: Number,
       required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Memebership = model<MembershipInterface>("Membership", MembershipSchema);
-export default Memebership;
+const Membership = model<MembershipInterface>("Membership", MembershipSchema);
+export default Membership;

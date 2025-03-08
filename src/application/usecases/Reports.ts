@@ -143,3 +143,14 @@ export class topTutorsUsecase {
     return tutors;
   }
 }
+
+export class membershipReportUsecase {
+  constructor(private reportRepository: ReportInterface) {}
+  public async execute(startDate: Date, endDate: Date): Promise<any> {
+    const memberships = await this.reportRepository.getMembershipReports(
+      startDate,
+      endDate
+    );
+    return memberships;
+  }
+}

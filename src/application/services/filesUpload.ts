@@ -16,11 +16,8 @@ export class FileUploadService {
       profileKey,
       profilePhoto
     );
-    const profilePictureUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      profileKey
-    );
-    return profilePictureUrl?.split("?")[0]; // Return the static URL
+
+    return uploadedKey;
   }
 
   async uploadCertificates(
@@ -34,11 +31,7 @@ export class FileUploadService {
         certKey,
         certificate
       );
-      const certUrl = await this.awsConfig.getfile(
-        uploadedKey.split("/").pop()!,
-        certKey
-      );
-      uploadedCertificates.push(certUrl.split("?")[0]);
+      uploadedCertificates.push(uploadedKey);
     }
     return uploadedCertificates;
   }
@@ -54,14 +47,7 @@ export class FileUploadService {
       thumbnailKey,
       thumbnail
     );
-    console.log("Uploaded key:", uploadedKey);
-    const thumbnailUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      thumbnailKey
-    );
-    console.log("Thumbnail URL:", thumbnailUrl);
-
-    return thumbnailUrl?.split("?")[0];
+    return uploadedKey;
   }
 
   async uploadCourseVideo(
@@ -70,11 +56,8 @@ export class FileUploadService {
   ): Promise<string | undefined> {
     const videoKey = `course/video/${courseId}/`;
     const uploadedKey = await this.awsConfig.uploadFileToS3(videoKey, video);
-    const videoUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      videoKey
-    );
-    return videoUrl?.split("?")[0];
+
+    return uploadedKey;
   }
 
   async uploadUserProfileImage(
@@ -83,11 +66,7 @@ export class FileUploadService {
   ): Promise<string | undefined> {
     const imageKey = `user/profile/${userId}/`;
     const uploadedKey = await this.awsConfig.uploadFileToS3(imageKey, image);
-    const imageUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      imageKey
-    );
-    return imageUrl?.split("?")[0];
+    return uploadedKey;
   }
 
   async uploadCourseCertificate(
@@ -101,10 +80,11 @@ export class FileUploadService {
       certKey,
       certificate
     );
-    const certUrl = await this.awsConfig.getfile(
-      uploadedKey.split("/").pop()!,
-      certKey
-    );
-    return certUrl?.split("?")[0];
+
+    return uploadedKey;
+  }
+
+  async getPresignedUrl(filename: string, folder: string): Promise<string> {
+    return this.awsConfig.getfile(filename, folder);
   }
 }

@@ -9,6 +9,8 @@ import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { sendEmail } from "../../application/services/applicationStatus";
 import { CourseRepositoryImpl } from "../../infrastructure/repositories/CourseRepository";
+import { updateUsersWithNewCourse } from "../../application/services/enrollCourse";
+import { getUrl } from "../../utils/getUrl";
 
 export const getAllUsersList = async (req: Request, res: Response) => {
   try {
@@ -19,6 +21,14 @@ export const getAllUsersList = async (req: Request, res: Response) => {
     const search = req.query.search as string;
     const category = req.query.category as string;
     const users = await getAllUsers.execute({ page, limit, search, category });
+    console.log(users.data);
+    console.log("users pre", users);
+    console.log("users final", users);
+    for (let user of users.data) {
+      if (user.profile) {
+        user.profile = await getUrl(user.profile);
+      }
+    }
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -40,6 +50,11 @@ export const getAllTutorList = async (req: Request, res: Response) => {
     const search = req.query.search as string;
     const category = req.query.category as string;
     const users = await getAllTutor.execute({ page, limit, search, category });
+    for (let user of users.data) {
+      if (user.profile) {
+        user.profile = await getUrl(user.profile);
+      }
+    }
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -64,6 +79,11 @@ export const getAllTutorListApplication = async (
     const getAllTutor = new GetAllTutorApplication(userRepository);
 
     const users = await getAllTutor.execute({ page, limit, search, category });
+    for (let user of users.data) {
+      if (user.profile) {
+        user.profile = await getUrl(user.profile);
+      }
+    }
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -135,7 +155,9 @@ export const approveTutor = async (req: Request, res: Response) => {
     await sendEmail(userEmail, true);
 
     console.log("Approval email sent successfully");
-
+    if (updatedUser?.profile) {
+      updatedUser.profile = await getUrl(updatedUser.profile);
+    }
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -156,9 +178,7 @@ export const disapproveTutor = async (req: Request, res: Response) => {
     if (!user) {
       throw new Error("Tutor not found");
     }
-    if (!user.isTutor) {
-      throw new Error("Tutor is already disapproved");
-    }
+
     const userEmail = user?.email;
     const updatedUser = await userRepository.update(tutorId, {
       isTutor: false,
@@ -166,7 +186,9 @@ export const disapproveTutor = async (req: Request, res: Response) => {
     });
     console.log("checkingggg and email will send");
     await sendEmail(userEmail, false);
-    console.log("checkingggg and email sent");
+    if (updatedUser?.profile) {
+      updatedUser.profile = await getUrl(updatedUser.profile);
+    }
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -184,12 +206,11 @@ export const GetallCoursesAdmin = async (
   res: Response
 ): Promise<any> => {
   try {
-    console.log("entering the get all courses admin controller");
     const CourseRepository = new CourseRepositoryImpl();
-    console.log("course repository created");
     const courses = await CourseRepository.getAllCoursesAdmin();
-    console.log("courses fetched", courses);
-    console.log("sending response");
+    for (let course of courses) {
+      course.thumbnail = await getUrl(course.thumbnail);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -250,14 +271,7 @@ export const approveOrRejectCourse = async (req: Request, res: Response) => {
   try {
     const { courseId } = req.params;
     const { courseStatus, percentage } = req.body;
-    if (percentage < 0 || percentage > 100) {
-      return sendResponseJson(
-        res,
-        HttpStatus.BAD_REQUEST,
-        "Invalid percentage",
-        false
-      );
-    }
+
     const courseRepo = new CourseRepositoryImpl();
     const existingCourse = await courseRepo.findCourseByGenerateId(courseId);
     if (!existingCourse) {
@@ -268,22 +282,62 @@ export const approveOrRejectCourse = async (req: Request, res: Response) => {
         false
       );
     }
-    // here i mention the calculation of the price
-    let sellingPrice = existingCourse.price / (1 - percentage / 100);
-    let wholeSellingPrice = Math.round(sellingPrice / 10) * 10;
-    const updatedCourse = {
-      isVisible: true,
-      courseStatus,
-      sellingPrice: wholeSellingPrice,
-    };
-    const course = await courseRepo.updateCourse(courseId, updatedCourse);
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      `Course ${courseStatus} successfully`,
-      true,
-      course
-    );
+
+    // Handle approved courses
+    if (courseStatus === "approved") {
+      // Validate percentage only for approved courses
+      if (percentage < 0 || percentage > 100) {
+        return sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid percentage",
+          false
+        );
+      }
+      // Calculate the selling price based on the provided percentage
+      let sellingPrice = existingCourse.price / (1 - percentage / 100);
+      let wholeSellingPrice = Math.round(sellingPrice / 10) * 10;
+
+      const updatedCourse = {
+        isVisible: true,
+        courseStatus,
+        sellingPrice: wholeSellingPrice,
+      };
+
+      const course = await courseRepo.updateCourse(courseId, updatedCourse);
+      const check = await updateUsersWithNewCourse(existingCourse);
+      console.log("check", check);
+      return sendResponseJson(
+        res,
+        HttpStatus.OK,
+        `Course ${courseStatus} successfully`,
+        true,
+        course
+      );
+    }
+    // Handle rejected courses
+    else if (courseStatus === "rejected") {
+      const updatedCourse = {
+        courseStatus, // You can add other fields if needed (e.g., isVisible: false)
+      };
+      const course = await courseRepo.updateCourse(courseId, updatedCourse);
+      return sendResponseJson(
+        res,
+        HttpStatus.OK,
+        `Course ${courseStatus} successfully`,
+        true,
+        course
+      );
+    }
+    // Invalid courseStatus provided
+    else {
+      return sendResponseJson(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid course status",
+        false
+      );
+    }
   } catch (error: any) {
     return sendResponseJson(
       res,

@@ -7,7 +7,12 @@ import HttpStatus from "../../utils/statusCodes";
 import { UpdateProfileService } from "../../application/services/updateProfile";
 import { approveCertificateUsecase } from "../../application/usecases/userLists";
 import { FileUploadService } from "../../application/services/filesUpload";
-import { getStudentsUsecase } from "../../application/usecases/loginUser";
+import {
+  getmyCoursesUsecase,
+  getStudentsUsecase,
+} from "../../application/usecases/loginUser";
+import { getUrl } from "../../utils/getUrl";
+import { ReportsRepository } from "../../infrastructure/repositories/ReportsRepository";
 
 export const updateProfile = async (
   req: Request,
@@ -28,6 +33,16 @@ export const updateProfile = async (
       updatesData,
       files: { profilePhoto, certificates },
     });
+
+    if (updatedUser.profile) {
+      updatedUser.profile = await getUrl(updatedUser.profile);
+    }
+
+    if (updatedUser.certificates) {
+      for (let certificate of updatedUser.certificates) {
+        certificate = await getUrl(certificate);
+      }
+    }
 
     sendResponseJson(
       res,
@@ -54,8 +69,11 @@ export const getTutorCertificates = async (
     console.log("check this id", id);
     const user = await userRepository.findById(id);
     console.log("check this user", user);
-    if (user) console.log("check this user", user.certificates);
-    if (user) {
+    if (user && user.certificates) {
+      user.certificates = await Promise.all(
+        user.certificates.map((certificate) => getUrl(certificate))
+      );
+
       sendResponseJson(
         res,
         HttpStatus.OK,
@@ -76,6 +94,9 @@ export const enrollStudents = async (req: Request, res: Response) => {
     const { id } = req.params;
     const repo = new UserRepository();
     const students = await repo.getEnrollStudents(id);
+    for (let student of students) {
+      student.profile = await getUrl(student.profile);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -140,8 +161,37 @@ export const getStudents = async (req: Request, res: Response) => {
     const repo = new UserRepository();
     const getUserusecase = new getStudentsUsecase(repo);
     const students = await getUserusecase.execute(id);
+
     return sendResponseJson(res, HttpStatus.OK, "Students", true, students);
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
+};
+export const myCourses = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const repo = new UserRepository();
+    const getUserusecase = new getmyCoursesUsecase(repo);
+    const students = await getUserusecase.execute(id);
+    for (let student of students) {
+      if (student.thumbnail) {
+        student.thumbnail = await getUrl(student.thumbnail);
+      }
+    }
+    return sendResponseJson(res, HttpStatus.OK, "Students", true, students);
+  } catch (error: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
+
+export const tutorDashboard = async (req: Request, res: Response) => {
+  const repo = new ReportsRepository();
+  const tutorDatas = await repo.tutorDashboards();
+  return sendResponseJson(
+    res,
+    HttpStatus.OK,
+    "Tutor Dashboards",
+    true,
+    tutorDatas
+  );
 };

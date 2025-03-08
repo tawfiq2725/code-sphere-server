@@ -3,7 +3,6 @@ import { Person } from "../../domain/entities/User";
 import UserModel, { UserDocument } from "../database/userSchema";
 import { PaginationOptions, paginate } from "../../utils/queryHelper";
 import Course, { ICourse } from "../database/courseSchema";
-import ChatModel from "../database/chatSchema";
 
 export class UserRepository implements UserInterface {
   private maptoEntity(userDoc: UserDocument): Person {
@@ -57,7 +56,9 @@ export class UserRepository implements UserInterface {
 
   public async getAllUsers(options: PaginationOptions): Promise<any> {
     const userQuery = { role: "student" };
+    console.log("userQuery", userQuery);
     const userDocs = await paginate(UserModel, options, userQuery);
+    console.log("userQuery", userDocs);
     return userDocs;
   }
 
@@ -69,7 +70,10 @@ export class UserRepository implements UserInterface {
   public async getAllTutorApplication(
     options: PaginationOptions
   ): Promise<any> {
-    const tutorQuery = { role: "tutor", isTutor: false };
+    const tutorQuery = {
+      role: "tutor",
+      isTutor: false,
+    };
     const userDocs = await paginate(UserModel, options, tutorQuery);
     return userDocs;
   }
@@ -225,5 +229,13 @@ export class UserRepository implements UserInterface {
     });
 
     return students.map((student: UserDocument) => this.maptoEntity(student));
+  }
+  public async myCourses(tutorId: string): Promise<any | null> {
+    const courses = await Course.find({ tutorId });
+
+    if (!courses || courses.length === 0) {
+      return [];
+    }
+    return courses;
   }
 }

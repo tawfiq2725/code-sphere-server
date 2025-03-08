@@ -13,6 +13,7 @@ export class MembershipOrderUsecase {
       orderData.membershipId,
       orderData.userId,
       orderData.categoryId,
+      orderData.membershipPlan,
       orderData.totalAmount,
       orderData.orderStatus,
       orderData.paymentStatus

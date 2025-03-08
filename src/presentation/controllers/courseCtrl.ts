@@ -8,6 +8,8 @@ import {
   ToggleCourseVisibility,
   CreateCourse,
 } from "../../application/usecases/Course";
+import { updateUsersWithNewCourse } from "../../application/services/enrollCourse";
+import { getUrl } from "../../utils/getUrl";
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -21,13 +23,14 @@ export const CourseCreate = async (
   try {
     const {
       courseName,
-      categoryName,
+      categoryName, // note: this is being used as categoryId
       courseDescription,
       info,
       price,
       prerequisites,
       tutorId,
     } = req.body;
+
     const repository = new CourseRepositoryImpl();
     const existingCourse = await repository.findCourseByName(courseName);
     if (existingCourse) {
@@ -48,16 +51,16 @@ export const CourseCreate = async (
     }
     const thumbnail: Express.Multer.File = req.file;
 
-    // inga courseId generate panndra
+    // Generate a unique courseId
     function generateCourseId() {
       const prefix = "CS";
-      const randomPart = Math.floor(10000 + Math.random() * 90000); // Generate a 5-digit random number
+      const randomPart = Math.floor(10000 + Math.random() * 90000);
       return `${prefix}${randomPart}`;
     }
 
     const courseId = generateCourseId();
 
-    // inga thumbnail file ah string convert panndra
+    // Upload thumbnail and convert file to string
     const thumbnailUrl =
       (await new FileUploadService().uploadCourseThumbnail(
         courseId,
@@ -73,6 +76,7 @@ export const CourseCreate = async (
         false
       );
     }
+
     const courseData = {
       courseId,
       courseName,
@@ -84,14 +88,16 @@ export const CourseCreate = async (
       isVisible: false,
       tutorId,
       courseStatus: "pending" as "pending",
-      categoryName,
+      categoryName, // used as the categoryId
     };
-    console.log("course data seted", courseData);
-    // inga courseData ah repository ku send panndra
-    const CourseRepository = new CourseRepositoryImpl();
-    const newCourse = new CreateCourse(CourseRepository);
 
-    await newCourse.execute(courseData);
+    console.log("course data set", courseData);
+    const CourseRepository = new CourseRepositoryImpl();
+    const newCourseUseCase = new CreateCourse(CourseRepository);
+
+    // Capture the newly created course from the use case
+    const createdCourse = await newCourseUseCase.execute(courseData);
+
     return sendResponseJson(
       res,
       HttpStatus.CREATED,
@@ -116,6 +122,9 @@ export const GetallCourses = async (
     const { id } = req.params;
     const CourseRepository = new CourseRepositoryImpl();
     const courses = await CourseRepository.getAllCoursesId(id);
+    for (let course of courses) {
+      course.thumbnail = await getUrl(course.thumbnail);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -140,6 +149,9 @@ export const GetallCourse = async (
   try {
     const CourseRepository = new CourseRepositoryImpl();
     const courses = await CourseRepository.getAllCourses();
+    for (let course of courses) {
+      course.thumbnail = await getUrl(course.thumbnail);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -169,6 +181,9 @@ export const GetcourseByGenerateId = async (req: Request, res: Response) => {
         "Course not found",
         false
       );
+    }
+    if (course.thumbnail) {
+      course.thumbnail = await getUrl(course.thumbnail);
     }
     return sendResponseJson(res, HttpStatus.OK, "Course fetched", true, course);
   } catch (error: any) {
@@ -219,7 +234,9 @@ export const EditCourse = async (req: Request, res: Response): Promise<any> => {
     }
 
     const updated = await repository.updateCourse(courseId, updates);
-
+    if (updated?.thumbnail) {
+      updated.thumbnail = await getUrl(updated.thumbnail);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,

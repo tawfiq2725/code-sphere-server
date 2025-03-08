@@ -3,6 +3,7 @@ import { Person } from "../../domain/entities/User";
 import { CreateUser } from "../../application/usecases/CreateUser";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 import {
+  getProfileUsecase,
   getTutorUsecasae,
   GoogleAuth,
   LoginUser,
@@ -18,6 +19,8 @@ import { GenerateOtp } from "../../application/usecases/generateOtp";
 import { sendOtpEmail } from "../../application/services/OtpService";
 import { FileUploadService } from "../../application/services/filesUpload";
 import { CouponRepository } from "../../infrastructure/repositories/CouponRepository";
+import { AwsConfig } from "../../config/awsConfig";
+import { getUrl } from "../../utils/getUrl";
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -103,12 +106,10 @@ export const getProfile = async (
     const email = req.query.email as string;
     console.log(email, "checking");
     const userRepository = new UserRepository();
-    const user = await userRepository.findByEmail(email);
-    console.log(user, "checkingggggggggggggggggggggggggg");
-    if (!user) {
-      sendResponseJson(res, HttpStatus.NOT_FOUND, "User not found", false);
-      return;
-    }
+    const aws = new FileUploadService();
+    const getProfileUsecas = new getProfileUsecase(userRepository, aws);
+    const user = await getProfileUsecas.execute(email);
+
     sendResponseJson(
       res,
       HttpStatus.OK,
@@ -329,6 +330,9 @@ export const getUserById = async (
     console.log(id);
     const repositories = new UserRepository();
     const user = await repositories.findById(id);
+    if (user?.profile) {
+      user.profile = await getUrl(user.profile);
+    }
     console.log(user);
     console.log("user found");
     if (!user) {
@@ -404,7 +408,9 @@ export const updateUserProfileImage = async (
     const { userId } = req.body;
     const profileImage = req.file;
     const userRepository = new UserRepository();
+    console.log("working...1");
     const user = await userRepository.findById(userId);
+    console.log("working...2");
     if (!user) {
       return sendResponseJson(
         res,
@@ -413,6 +419,7 @@ export const updateUserProfileImage = async (
         false
       );
     }
+    console.log("working...3");
     if (!profileImage) {
       return sendResponseJson(
         res,
@@ -421,13 +428,19 @@ export const updateUserProfileImage = async (
         false
       );
     }
-    const imageUrl = await uploadservice.uploadUserProfileImage(
+    console.log("working...4");
+    const imageKey = await uploadservice.uploadUserProfileImage(
       userId,
       profileImage
     );
-    user.profile = imageUrl;
-    console.log(user);
+    console.log("working...5");
+    user.profile = imageKey;
     await userRepository.update(userId, user);
+
+    if (user.profile) {
+      user.profile = await getUrl(user.profile);
+    }
+
     return sendResponseJson(
       res,
       HttpStatus.OK,
@@ -506,6 +519,7 @@ export const getTutor = async (req: Request, res: Response) => {
     const userRepo = new UserRepository();
     const tutorUsecase = new getTutorUsecasae(userRepo);
     const tutors = await tutorUsecase.execute(id);
+
     return sendResponseJson(res, HttpStatus.OK, "Tutors fetched", true, tutors);
   } catch (error: any) {
     return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);

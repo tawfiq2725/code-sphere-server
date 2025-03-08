@@ -1,4 +1,6 @@
+import { UserData } from "../../application/usecases/userLists";
 import { PaginationOptions } from "../../utils/queryHelper";
+import { Course } from "../entities/Course";
 import { Person } from "../entities/User";
 
 export interface UserInterface {
@@ -6,9 +8,9 @@ export interface UserInterface {
   findByEmail(email: string): Promise<Person | null>;
   findById(id: string): Promise<Person | null>;
   update(id: string, user: Person): Promise<Person | null>;
-  getAllUsers(options: PaginationOptions): Promise<Person[]>;
-  getAllTutor(options: PaginationOptions): Promise<Person[]>;
-  getAllTutorApplication(options: PaginationOptions): Promise<Person[]>;
+  getAllUsers(options: PaginationOptions): Promise<UserData>;
+  getAllTutor(options: PaginationOptions): Promise<UserData>;
+  getAllTutorApplication(options: PaginationOptions): Promise<UserData>;
   BlockUser(id: string): Promise<Person | null>;
   UnblockUser(id: string): Promise<Person | null>;
   approveTutor(id: string): Promise<Person | null>;
@@ -19,4 +21,5 @@ export interface UserInterface {
   setRole(userId: string, role: string): Promise<Person | null>;
   getTutors(id: string): Promise<Person[]>;
   getUsers(tutorId: string): Promise<Person[]>;
+  myCourses(tutorId: string): Promise<any | null>;
 }

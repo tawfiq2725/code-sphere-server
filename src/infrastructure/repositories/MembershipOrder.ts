@@ -43,7 +43,7 @@ export class MembershipOrderRepository implements MembershipOrderInterface {
       userId: id,
     }).populate("membershipId", "membershipName");
     if (!membershipOrders.length) {
-      return null;
+      return [];
     }
     return membershipOrders.map(
       (order) => order.toObject() as unknown as MembershipOrder

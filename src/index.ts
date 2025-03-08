@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { config } from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import logger from "morgan";
 import connectToDatabase from "./infrastructure/database/dbConnection";
 import authRoutes from "./infrastructure/routes/authRoutes";
 import adminRoutes from "./infrastructure/routes/adminRoutes";
@@ -14,7 +15,6 @@ import MembershipOrder from "./infrastructure/database/order-mSchema";
 import cron from "node-cron";
 import { configFrontend } from "./config/ConfigSetup";
 import { initSocket } from "./config/socketConfig";
-
 config();
 const PORT = process.env.APP_PORT || 4000;
 
@@ -32,6 +32,7 @@ const io = initSocket(server);
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+app.use(logger("dev"));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/reports", reportRoutes);

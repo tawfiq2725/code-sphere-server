@@ -1,26 +1,31 @@
-import { app } from "firebase-admin";
 import { Person } from "../../domain/entities/User";
 import { UserInterface } from "../../domain/interface/User";
 import { PaginationOptions } from "../../utils/queryHelper";
 import { FileUploadService } from "../services/filesUpload";
 
+export interface UserData {
+  data: Person[];
+  pagination: PaginationOptions;
+}
+
 export class GetAllUsers {
   constructor(private readonly userRepository: UserInterface) {}
-  async execute(options: PaginationOptions): Promise<Person[]> {
+  async execute(options: PaginationOptions): Promise<UserData> {
     return this.userRepository.getAllUsers(options);
   }
 }
 
 export class GetAllTutor {
   constructor(private readonly userRepository: UserInterface) {}
-  async execute(options: PaginationOptions): Promise<Person[]> {
+  async execute(options: PaginationOptions): Promise<UserData> {
     const tutorList = this.userRepository.getAllTutor(options);
+    console.log("tutorList working", tutorList);
     return tutorList;
   }
 }
 export class GetAllTutorApplication {
   constructor(private readonly userRepository: UserInterface) {}
-  async execute(options: PaginationOptions): Promise<Person[]> {
+  async execute(options: PaginationOptions): Promise<UserData> {
     const tutorList = this.userRepository.getAllTutorApplication(options);
     return tutorList;
   }
