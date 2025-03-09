@@ -9,6 +9,7 @@ import HttpStatus from "../../utils/statusCodes";
 import { MembershipOrderRepository } from "../../infrastructure/repositories/MembershipOrder";
 import { CourseRepositoryImpl } from "../../infrastructure/repositories/CourseRepository";
 import { UserRepository } from "../../infrastructure/repositories/UserRepository";
+import { getUrl } from "../../utils/getUrl";
 
 export const createMembership = async (req: Request, res: Response) => {
   try {
@@ -259,6 +260,9 @@ export const getCertificatesByStudent = async (req: Request, res: Response) => {
   const userRepo = new UserRepository();
   try {
     const certificates = await userRepo.getCertificatesByStudent(id);
+    for (let certificate of certificates) {
+      certificate.certificateUrl = await getUrl(certificate.certificateUrl);
+    }
     return sendResponseJson(
       res,
       HttpStatus.OK,

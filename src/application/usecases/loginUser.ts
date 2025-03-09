@@ -189,6 +189,7 @@ export class getmyCoursesUsecase {
 
   public async execute(id: string): Promise<Course[]> {
     const courses = await this.userRepository.myCourses(id);
+    if (!courses) return [];
     for (let course of courses) {
       if (course.thumbnail) {
         const fileName = course.thumbnail.split("/").pop()!;
@@ -201,7 +202,7 @@ export class getmyCoursesUsecase {
         course.thumbnail = presignedUrl;
       }
     }
-    return courses ? [courses] : [];
+    return courses;
   }
 }
 

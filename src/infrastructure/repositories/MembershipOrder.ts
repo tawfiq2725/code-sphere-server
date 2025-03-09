@@ -4,49 +4,74 @@ import MembershipOrderS from "../database/order-mSchema";
 
 export class MembershipOrderRepository implements MembershipOrderInterface {
   async create(membershipOrder: MembershipOrder): Promise<MembershipOrder> {
-    const membershipOrderDetails = (await MembershipOrderS.create(
-      membershipOrder
-    )) as unknown as MembershipOrder;
-    return membershipOrderDetails;
+    try {
+      const membershipOrderDetails = (await MembershipOrderS.create(
+        membershipOrder
+      )) as unknown as MembershipOrder;
+      return membershipOrderDetails;
+    } catch (err) {
+      console.log(err);
+      throw new Error("Error in creating membership order");
+    }
   }
   async findMembershipOrderById(id: string): Promise<MembershipOrder | null> {
-    const membershipOrder = await MembershipOrderS.findOne({
-      membershipOrderId: id,
-    })
-      .populate("membershipId", "membershipName")
-      .populate("userId", "name email")
-      .populate("categoryId", "categoryName");
-    return membershipOrder
-      ? (membershipOrder.toObject() as unknown as MembershipOrder)
-      : null;
+    try {
+      const membershipOrder = await MembershipOrderS.findOne({
+        membershipOrderId: id,
+      })
+        .populate("membershipId", "membershipName")
+        .populate("userId", "name email")
+        .populate("categoryId", "categoryName");
+      return membershipOrder
+        ? (membershipOrder.toObject() as unknown as MembershipOrder)
+        : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   async getAllMembershipOrders(): Promise<MembershipOrder[]> {
-    return await MembershipOrderS.find({ orderStatus: "success" });
+    try {
+      return await MembershipOrderS.find({ orderStatus: "success" });
+    } catch (err) {
+      console.log(err);
+      return [];
+    }
   }
   async updateMembershipOrder(
     id: string,
     membershipOrder: Partial<MembershipOrder>
   ): Promise<MembershipOrder | null> {
-    return await MembershipOrderS.findOneAndUpdate(
-      { membershipOrderId: id },
-      membershipOrder,
-      {
-        new: true,
-      }
-    );
+    try {
+      return await MembershipOrderS.findOneAndUpdate(
+        { membershipOrderId: id },
+        membershipOrder,
+        {
+          new: true,
+        }
+      );
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
   async getMembershipOrderByUserId(
     id: string
   ): Promise<MembershipOrder[] | null> {
-    const membershipOrders = await MembershipOrderS.find({
-      userId: id,
-    }).populate("membershipId", "membershipName");
-    if (!membershipOrders.length) {
-      return [];
+    try {
+      const membershipOrders = await MembershipOrderS.find({
+        userId: id,
+      }).populate("membershipId", "membershipName");
+      if (!membershipOrders.length) {
+        return [];
+      }
+      return membershipOrders.map(
+        (order) => order.toObject() as unknown as MembershipOrder
+      );
+    } catch (err) {
+      console.log(err);
+      return null;
     }
-    return membershipOrders.map(
-      (order) => order.toObject() as unknown as MembershipOrder
-    );
   }
 }

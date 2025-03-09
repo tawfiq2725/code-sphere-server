@@ -7,14 +7,27 @@ export class OtpRepositoryImpl implements OtpRepository {
     otp: string;
     expiresAt: Date;
   }): Promise<void> {
-    await OtpModel.create(otp);
+    try {
+      await OtpModel.create(otp);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async findByEmail(email: string): Promise<any | null> {
-    return OtpModel.findOne({ email });
+    try {
+      return OtpModel.findOne({ email });
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   async deleteByEmail(email: string): Promise<void> {
-    await OtpModel.deleteOne({ email });
+    try {
+      await OtpModel.deleteOne({ email });
+    } catch (err) {
+      console.log(err);
+    }
   }
 }

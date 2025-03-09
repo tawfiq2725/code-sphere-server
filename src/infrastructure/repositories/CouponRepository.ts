@@ -49,24 +49,49 @@ export class CouponRepository {
   public async findCouponByCouponCode(
     couponCode: string
   ): Promise<Coupons | null> {
-    const coupon = await CouponS.findOne({ couponCode });
-    return this.convertToCoupons(coupon?.toObject() || null);
+    try {
+      const coupon = await CouponS.findOne({ couponCode });
+      return this.convertToCoupons(coupon?.toObject() || null);
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async applyCouponUsage(
     couponId: string,
     usageData: IUsedBy
   ): Promise<Coupons | null> {
-    const updated = await CouponS.findByIdAndUpdate(
-      couponId,
-      { $push: { usedBy: usageData } },
-      { new: true }
-    );
-    return this.convertToCoupons(updated?.toObject() || null);
+    try {
+      const updated = await CouponS.findByIdAndUpdate(
+        couponId,
+        { $push: { usedBy: usageData } },
+        { new: true }
+      );
+      return this.convertToCoupons(updated?.toObject() || null);
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async isCouponNameExists(couponCode: string): Promise<boolean> {
-    const coupon = await CouponS.findOne({ couponCode });
-    return !!coupon;
+    try {
+      const coupon = await CouponS.findOne({ couponCode });
+      return !!coupon;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
+  }
+
+  public async deleteCoupon(id: string): Promise<Coupons | null> {
+    try {
+      const deleted = await CouponS.findByIdAndDelete(id);
+      return this.convertToCoupons(deleted?.toObject() || null);
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 }

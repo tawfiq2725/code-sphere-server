@@ -3,6 +3,7 @@ import { Person } from "../../domain/entities/User";
 import UserModel, { UserDocument } from "../database/userSchema";
 import { PaginationOptions, paginate } from "../../utils/queryHelper";
 import Course, { ICourse } from "../database/courseSchema";
+import { UserData } from "../../application/usecases/userLists";
 
 export class UserRepository implements UserInterface {
   private maptoEntity(userDoc: UserDocument): Person {
@@ -29,213 +30,326 @@ export class UserRepository implements UserInterface {
   }
 
   public async create(user: Person): Promise<Person> {
-    const userDoc = new UserModel(user);
-    await userDoc.save();
-    return this.maptoEntity(userDoc);
+    try {
+      const userDoc = new UserModel(user);
+      await userDoc.save();
+      return this.maptoEntity(userDoc);
+    } catch (err) {
+      console.log(err);
+      throw new Error("User already exists");
+    }
   }
 
   public async findByEmail(email: string): Promise<Person | null> {
-    const userDoc = await UserModel.findOne({ email }).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findOne({ email }).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async findById(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findById(id).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findById(id).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async update(
     id: string,
     user: Partial<Person>
   ): Promise<Person | null> {
-    const userDoc = await UserModel.findByIdAndUpdate(id, user, {
-      new: true,
-    }).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findByIdAndUpdate(id, user, {
+        new: true,
+      }).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
-  public async getAllUsers(options: PaginationOptions): Promise<any> {
-    const userQuery = { role: "student" };
-    console.log("userQuery", userQuery);
-    const userDocs = await paginate(UserModel, options, userQuery);
-    console.log("userQuery", userDocs);
-    return userDocs;
+  public async getAllUsers(options: PaginationOptions): Promise<UserData> {
+    try {
+      const userQuery = { role: "student" };
+      console.log("userQuery", userQuery);
+      const userDocs = await paginate(UserModel, options, userQuery);
+      console.log("userQuery", userDocs);
+      return {
+        data: userDocs.data.map((doc) => this.maptoEntity(doc)),
+        pagination: userDocs.pagination,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error("Error getting");
+    }
   }
 
-  public async getAllTutor(options: PaginationOptions): Promise<any> {
-    const tutorQuery = { role: "tutor", isTutor: true };
-    const userDocs = await paginate(UserModel, options, tutorQuery);
-    return userDocs;
+  public async getAllTutor(options: PaginationOptions): Promise<UserData> {
+    try {
+      const tutorQuery = { role: "tutor", isTutor: true };
+      const userDocs = await paginate(UserModel, options, tutorQuery);
+      return {
+        data: userDocs.data.map((doc) => this.maptoEntity(doc)),
+        pagination: userDocs.pagination,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error("Error getting");
+    }
   }
   public async getAllTutorApplication(
     options: PaginationOptions
-  ): Promise<any> {
-    const tutorQuery = {
-      role: "tutor",
-      isTutor: false,
-    };
-    const userDocs = await paginate(UserModel, options, tutorQuery);
-    return userDocs;
+  ): Promise<UserData> {
+    try {
+      const tutorQuery = {
+        role: "tutor",
+        isTutor: false,
+      };
+      const userDocs = await paginate(UserModel, options, tutorQuery);
+      return {
+        data: userDocs.data.map((doc) => this.maptoEntity(doc)),
+        pagination: userDocs.pagination,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error("Error getting");
+    }
   }
 
   public async BlockUser(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findByIdAndUpdate(
-      id,
-      { isBlocked: true },
-      { new: true }
-    ).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findByIdAndUpdate(
+        id,
+        { isBlocked: true },
+        { new: true }
+      ).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async UnblockUser(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findByIdAndUpdate(
-      id,
-      { isBlocked: false },
-      { new: true }
-    ).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findByIdAndUpdate(
+        id,
+        { isBlocked: false },
+        { new: true }
+      ).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async approveTutor(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findByIdAndUpdate(
-      id,
-      { isTutor: true },
-      { new: true }
-    ).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findByIdAndUpdate(
+        id,
+        { isTutor: true },
+        { new: true }
+      ).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 
   public async disapproveTutor(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findByIdAndUpdate(
-      id,
-      { isTutor: false },
-      { new: true }
-    ).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findByIdAndUpdate(
+        id,
+        { isTutor: false },
+        { new: true }
+      ).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
   public async getProfile(id: string): Promise<Person | null> {
-    const userDoc = await UserModel.findById(id).exec();
-    return userDoc ? this.maptoEntity(userDoc) : null;
+    try {
+      const userDoc = await UserModel.findById(id).exec();
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
   public async findUserIdByEmail(email: string): Promise<string | null> {
-    const userDoc = await UserModel.findOne({ email }).select("_id").exec();
-    return userDoc ? userDoc._id : null;
+    try {
+      const userDoc = await UserModel.findOne({ email }).select("_id").exec();
+      return userDoc ? userDoc._id : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
-  public async getUserProfileImage(id: string): Promise<any> {
-    const userDoc = await UserModel.findById(id).select("profile").exec();
-    return userDoc ? userDoc.profile : null;
+  public async getUserProfileImage(id: string): Promise<string | undefined> {
+    try {
+      const userDoc = await UserModel.findById(id).select("profile").exec();
+      return userDoc ? userDoc.profile : "";
+    } catch (err) {
+      console.log(err);
+      return undefined;
+    }
   }
 
-  public async getEnrollStudents(courseId: string): Promise<any> {
-    const userDocs = await UserModel.find({
-      courseProgress: {
-        $elemMatch: { courseId: courseId },
-      },
-    }).exec();
-    return userDocs;
+  public async getEnrollStudents(courseId: string): Promise<Person[] | null> {
+    try {
+      const userDocs = await UserModel.find({
+        courseProgress: {
+          $elemMatch: { courseId: courseId },
+        },
+      }).exec();
+      return userDocs ? userDocs.map((doc) => this.maptoEntity(doc)) : null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
   public async approveCertificate(data: any): Promise<any> {
-    console.log("studentDAta", data);
-    console.log(data.studentId);
-    const userDoc = await UserModel.findByIdAndUpdate(
-      data.studentId,
-      {
-        $push: {
-          CourseCertificate: {
-            courseId: data.courseId,
-            status: data.status,
-            certificateUrl: data.certificateUrl,
-            issuedDate: data.issueDate, // Changed to match the schema field
-            approvedBy: data.approvedBy,
+    try {
+      console.log("studentDAta", data);
+      console.log(data.studentId);
+      const userDoc = await UserModel.findByIdAndUpdate(
+        data.studentId,
+        {
+          $push: {
+            CourseCertificate: {
+              courseId: data.courseId,
+              status: data.status,
+              certificateUrl: data.certificateUrl,
+              issuedDate: data.issueDate, // Changed to match the schema field
+              approvedBy: data.approvedBy,
+            },
           },
         },
-      },
-      { new: true }
-    ).exec();
-    console.log("updated successfully");
-    return userDoc ? this.maptoEntity(userDoc) : null;
+        { new: true }
+      ).exec();
+      console.log("updated successfully");
+      return userDoc ? this.maptoEntity(userDoc) : null;
+    } catch (err) {
+      console.log(err);
+    }
   }
   public async getCertificatesByStudent(studentId: string): Promise<any> {
-    const userDoc = await UserModel.findById(studentId);
-    return userDoc ? userDoc.CourseCertificate : null;
+    try {
+      const userDoc = await UserModel.findById(studentId);
+      return userDoc ? userDoc.CourseCertificate : null;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public async googleAuthLogin(
     userData: any
   ): Promise<{ user: any; isNewUser: boolean }> {
-    const { email, name, googleId, picture } = userData;
-    let user = await UserModel.findOne({ email }).exec();
-    let isNewUser = false;
-    if (!user) {
-      user = new UserModel({
-        email,
-        name,
-        googleId,
-        isVerified: true,
-        profile: picture,
-      });
-      await user.save();
-      isNewUser = true;
+    try {
+      const { email, name, googleId, picture } = userData;
+      let user = await UserModel.findOne({ email }).exec();
+      let isNewUser = false;
+      if (!user) {
+        user = new UserModel({
+          email,
+          name,
+          googleId,
+          isVerified: true,
+          profile: picture,
+        });
+        await user.save();
+        isNewUser = true;
+      }
+      return { user, isNewUser };
+    } catch (err) {
+      console.log(err);
+      throw new Error("Error in google auth login");
     }
-    return { user, isNewUser };
   }
 
   public async setRole(
     userId: string,
     role: "student" | "tutor" | "admin"
   ): Promise<Person | null> {
-    const userData = await UserModel.findById(userId).exec();
-    if (!userData) {
-      throw new Error("User not found");
+    try {
+      const userData = await UserModel.findById(userId).exec();
+      if (!userData) {
+        throw new Error("User not found");
+      }
+      userData.role = role;
+      await userData.save();
+      return this.maptoEntity(userData);
+    } catch (err) {
+      console.log(err);
+      return null;
     }
-
-    userData.role = role;
-    await userData.save();
-    return this.maptoEntity(userData);
   }
 
   public async getTutors(studentId: string): Promise<Person[]> {
-    // 1. Retrieve the student document by ID.
-    const student = await UserModel.findById(studentId);
-    if (!student) {
-      throw new Error("Student not found");
-    }
+    try {
+      const student = await UserModel.findById(studentId);
+      if (!student) {
+        throw new Error("Student not found");
+      }
+      const courseIds = student.courseProgress
+        ? student.courseProgress.map((item) => item.courseId)
+        : [];
+      const courses = await Course.find({ courseId: { $in: courseIds } });
+      const tutorIds = courses.map((course) => course.tutorId);
+      const uniqueTutorIds = [...new Set(tutorIds)];
+      const tutors = await UserModel.find({
+        _id: { $in: uniqueTutorIds },
+        role: "tutor",
+      });
 
-    // 2. Extract courseIds from the student's courseProgress array.
-    const courseIds = student.courseProgress
-      ? student.courseProgress.map((item) => item.courseId)
-      : [];
-    const courses = await Course.find({ courseId: { $in: courseIds } });
-    const tutorIds = courses.map((course) => course.tutorId);
-    const uniqueTutorIds = [...new Set(tutorIds)];
-    const tutors = await UserModel.find({
-      _id: { $in: uniqueTutorIds },
-      role: "tutor",
-    });
-
-    return tutors.map((tutor) => this.maptoEntity(tutor));
-  }
-  public async getUsers(tutorId: string): Promise<any[]> {
-    const courses = await Course.find({ tutorId });
-
-    if (!courses || courses.length === 0) {
+      return tutors.map((tutor) => this.maptoEntity(tutor));
+    } catch (err) {
+      console.log(err);
       return [];
     }
-    const tutorCourseIds = courses.map((course: ICourse) => course.courseId);
-
-    const students = await UserModel.find({
-      role: "student",
-      courseProgress: { $elemMatch: { courseId: { $in: tutorCourseIds } } },
-    });
-
-    return students.map((student: UserDocument) => this.maptoEntity(student));
   }
-  public async myCourses(tutorId: string): Promise<any | null> {
-    const courses = await Course.find({ tutorId });
+  public async getUsers(tutorId: string): Promise<Person[]> {
+    try {
+      const courses = await Course.find({ tutorId });
 
-    if (!courses || courses.length === 0) {
+      if (!courses || courses.length === 0) {
+        return [];
+      }
+      const tutorCourseIds = courses.map((course: ICourse) => course.courseId);
+
+      const students = await UserModel.find({
+        role: "student",
+        courseProgress: { $elemMatch: { courseId: { $in: tutorCourseIds } } },
+      });
+
+      return students.map((student: UserDocument) => this.maptoEntity(student));
+    } catch (err) {
+      console.log(err);
       return [];
     }
-    return courses;
+  }
+  public async myCourses(tutorId: string): Promise<ICourse[] | null> {
+    try {
+      const courses = await Course.find({ tutorId });
+
+      if (!courses || courses.length === 0) {
+        return [];
+      }
+      return courses;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
   }
 }

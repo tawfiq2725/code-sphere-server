@@ -3,6 +3,7 @@ import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import dotenv from "dotenv";
 import ChatModel from "../infrastructure/database/chatSchema";
+import UserModel from "../infrastructure/database/userSchema"; // Importing your User model
 
 dotenv.config();
 
@@ -32,6 +33,15 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
     // Handle joining a chat room
     socket.on("join:chat", async (data) => {
       try {
+        // First check if either user is blocked
+        const isBlocked = await checkIfBlocked(data.userId, data.tutorId);
+        if (isBlocked.blocked) {
+          socket.emit("chat:blocked", {
+            error: `This conversation is unavailable because ${isBlocked.blockedEntity} has been blocked by admin`,
+          });
+          return;
+        }
+
         let chat = await ChatModel.findOne({
           tutorId: data.tutorId,
           userId: data.userId,
@@ -62,6 +72,19 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
         let chat = await ChatModel.findById(data.chatId);
         if (!chat) {
           socket.emit("message:error", { error: "Chat not found" });
+          return;
+        }
+
+        // Check for blocked status before sending message
+        // This ensures real-time blocking even if the chat was already joined
+        const isBlocked = await checkIfBlocked(
+          chat.userId.toString(),
+          chat.tutorId.toString()
+        );
+        if (isBlocked.blocked) {
+          socket.emit("message:blocked", {
+            error: `Message could not be sent because ${isBlocked.blockedEntity} has been blocked by admin`,
+          });
           return;
         }
 
@@ -112,3 +135,34 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
 
   return io;
 };
+
+// Helper function to check if either user is blocked
+async function checkIfBlocked(
+  userId: string,
+  tutorId: string
+): Promise<{ blocked: boolean; blockedEntity: string }> {
+  try {
+    // Get both user and tutor documents to check their blocked status
+    const user = await UserModel.findById(userId);
+    const tutor = await UserModel.findById(tutorId); // Using UserModel since tutors are in the same collection
+
+    if (!user || !tutor) {
+      console.error("User or tutor not found during block check");
+      return { blocked: false, blockedEntity: "" };
+    }
+
+    // Check if either is blocked by admin
+    if (user.isBlocked) {
+      return { blocked: true, blockedEntity: "the student" };
+    }
+
+    if (tutor.isBlocked) {
+      return { blocked: true, blockedEntity: "the tutor" };
+    }
+
+    return { blocked: false, blockedEntity: "" };
+  } catch (error) {
+    console.error("Error checking blocked status:", error);
+    return { blocked: false, blockedEntity: "" }; // Default to not blocked in case of error
+  }
+}

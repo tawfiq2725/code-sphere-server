@@ -29,5 +29,5 @@ router.post(
 
 router.get("/get-students/:id", getStudents);
 router.get("/my-courses/:id", myCourses);
-router.get("/dashboard/tutor", tutorDashboard);
+router.get("/dashboard/tutor/:id", tutorDashboard);
 export default router;

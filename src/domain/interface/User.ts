@@ -21,5 +21,5 @@ export interface UserInterface {
   setRole(userId: string, role: string): Promise<Person | null>;
   getTutors(id: string): Promise<Person[]>;
   getUsers(tutorId: string): Promise<Person[]>;
-  myCourses(tutorId: string): Promise<any | null>;
+  myCourses(tutorId: string): Promise<Course[] | null>;
 }

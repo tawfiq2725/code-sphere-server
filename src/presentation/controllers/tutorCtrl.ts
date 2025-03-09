@@ -185,8 +185,9 @@ export const myCourses = async (req: Request, res: Response) => {
 };
 
 export const tutorDashboard = async (req: Request, res: Response) => {
+  const { id } = req.params;
   const repo = new ReportsRepository();
-  const tutorDatas = await repo.tutorDashboards();
+  const tutorDatas = await repo.getTutorDashboard(id);
   return sendResponseJson(
     res,
     HttpStatus.OK,
