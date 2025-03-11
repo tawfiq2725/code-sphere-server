@@ -21,9 +21,11 @@ import {
   updateCategory,
   toggleVisiblityCategory,
   getCategory,
+  getAllCategoryCheck,
 } from "../../presentation/controllers/categoryCtrl";
 import {
   createCoupon,
+  deleteCoupon,
   getAllCoupons,
   toggleCoupon,
   updateCoupon,
@@ -58,6 +60,7 @@ router.get("/get-coupons", getAllCoupons);
 router.post("/create-coupon", createCoupon);
 router.patch("/update-coupon/:id", updateCoupon);
 router.patch("/coupon/toggle/:id", toggleCoupon);
+router.delete("/coupon/delete/:id", deleteCoupon);
 
 // Not auth
 router.get("/get-chapter-front/:courseId", getChapter);
@@ -68,5 +71,6 @@ router.get("/get-categories", getAllCategory);
 router.patch("/update-category/:id", updateCategory);
 router.patch("/chapter/toggle-visibility/:id", toggleVisiblityCategory);
 router.patch(`/update-progress`, updateCourseProgress);
+router.get("/get-category-all/:id", getAllCategoryCheck);
 
 export default router;

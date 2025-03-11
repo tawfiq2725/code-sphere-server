@@ -206,19 +206,21 @@ export class UserRepository implements UserInterface {
     }
   }
 
-  public async getEnrollStudents(courseId: string): Promise<Person[] | null> {
+  public async getEnrollStudents(courseId: string): Promise<any[] | null> {
     try {
       const userDocs = await UserModel.find({
-        courseProgress: {
-          $elemMatch: { courseId: courseId },
-        },
-      }).exec();
-      return userDocs ? userDocs.map((doc) => this.maptoEntity(doc)) : null;
+        courseProgress: { $elemMatch: { courseId } },
+      })
+        .lean()
+        .exec();
+
+      return userDocs;
     } catch (err) {
       console.log(err);
       return null;
     }
   }
+
   public async approveCertificate(data: any): Promise<any> {
     try {
       console.log("studentDAta", data);

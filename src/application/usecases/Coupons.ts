@@ -64,3 +64,13 @@ export class updateCouponUsedByusecase {
     return await this.couponRepository.updateCoupon(id, coupon);
   }
 }
+
+export class deleteCouponUsecase {
+  constructor(private couponRepository: CouponInterface) {}
+  public async execute(id: string): Promise<Coupons> {
+    if (!id) {
+      throw new Error("Missing id");
+    }
+    return await this.couponRepository.deleteCoupon(id);
+  }
+}

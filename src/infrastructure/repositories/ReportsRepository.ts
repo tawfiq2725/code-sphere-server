@@ -107,22 +107,41 @@ export class ReportsRepository implements ReportInterface {
     }
   }
 
-  public async getRevenueData(groupBy: any): Promise<any> {
+  public async getRevenueData(groupBy: string): Promise<any> {
     try {
       const revenueData = await OrderS.aggregate([
         {
-          $match: {
-            orderStatus: "success",
+          $match: { orderStatus: "success" },
+        },
+
+        {
+          $project: {
+            groupField: groupBy,
+            revenue: {
+              $convert: { input: "$totalAmount", to: "double", onError: 0 },
+            },
           },
         },
+
+        {
+          $unionWith: {
+            coll: "membershiporders",
+            pipeline: [
+              { $match: { orderStatus: "success" } },
+              {
+                $project: {
+                  groupField: groupBy,
+                  revenue: "$totalAmount",
+                },
+              },
+            ],
+          },
+        },
+
         {
           $group: {
-            _id: groupBy,
-            totalRevenue: {
-              $sum: {
-                $convert: { input: "$totalAmount", to: "double", onError: 0 },
-              },
-            },
+            _id: "$groupField",
+            totalRevenue: { $sum: "$revenue" },
           },
         },
         {
@@ -174,34 +193,71 @@ export class ReportsRepository implements ReportInterface {
   public async topTutors(): Promise<any> {
     try {
       const topTutorsAggregation = await OrderS.aggregate([
+        // === Pipeline for regular orders ===
         {
-          $match: {
-            orderStatus: "success",
-          },
+          $match: { orderStatus: "success" },
         },
         {
           $group: {
-            _id: "$courseId", // courseId is a String
+            _id: "$courseId", // courseId is a String in orders
             enrollmentCount: { $sum: 1 },
           },
         },
         {
           $lookup: {
-            from: "courses",
+            from: "courses", // lookup course details to get tutorId
             localField: "_id",
             foreignField: "courseId",
             as: "courseDetails",
           },
         },
-        {
-          $unwind: "$courseDetails",
-        },
+        { $unwind: "$courseDetails" },
         {
           $group: {
-            _id: "$courseDetails.tutorId", // tutorId is a String
+            _id: "$courseDetails.tutorId", // tutorId comes from course details
             totalEnrollments: { $sum: "$enrollmentCount" },
           },
         },
+        // === Union with membership orders pipeline ===
+        {
+          $unionWith: {
+            coll: "membershiporders", // ensure this matches your collection name
+            pipeline: [
+              { $match: { orderStatus: "success" } },
+              // Lookup membership document to get tutorId (assumes memberships collection has tutorId)
+              {
+                $lookup: {
+                  from: "memberships", // adjust if your memberships collection is named differently
+                  localField: "membershipId",
+                  foreignField: "_id",
+                  as: "membershipDetails",
+                },
+              },
+              { $unwind: "$membershipDetails" },
+              // Project a common field: tutorId and count each membership order as one enrollment
+              {
+                $project: {
+                  tutorId: "$membershipDetails.tutorId",
+                  enrollmentCount: { $literal: 1 },
+                },
+              },
+              {
+                $group: {
+                  _id: "$tutorId",
+                  totalEnrollments: { $sum: "$enrollmentCount" },
+                },
+              },
+            ],
+          },
+        },
+        // === Re-group to combine enrollments from both pipelines ===
+        {
+          $group: {
+            _id: "$_id",
+            totalEnrollments: { $sum: "$totalEnrollments" },
+          },
+        },
+        // === Lookup tutor details from users ===
         {
           $lookup: {
             from: "users",
@@ -209,22 +265,17 @@ export class ReportsRepository implements ReportInterface {
             pipeline: [
               {
                 $match: {
-                  $expr: {
-                    $eq: [{ $toString: "$_id" }, "$$tutorIdStr"], // Convert ObjectId to String
-                  },
+                  $expr: { $eq: [{ $toString: "$_id" }, "$$tutorIdStr"] },
                 },
               },
             ],
             as: "tutorDetails",
           },
         },
+        { $unwind: "$tutorDetails" },
+        // Only include documents where the user is marked as a tutor
         {
-          $unwind: "$tutorDetails",
-        },
-        {
-          $match: {
-            "tutorDetails.isTutor": true,
-          },
+          $match: { "tutorDetails.isTutor": true },
         },
         {
           $project: {
@@ -234,14 +285,10 @@ export class ReportsRepository implements ReportInterface {
             totalEnrollments: 1,
           },
         },
-        {
-          $sort: { totalEnrollments: -1 },
-        },
-
-        {
-          $limit: 5,
-        },
+        { $sort: { totalEnrollments: -1 } },
+        { $limit: 5 },
       ]);
+
       return topTutorsAggregation;
     } catch (err) {
       console.log(err);
@@ -283,41 +330,151 @@ export class ReportsRepository implements ReportInterface {
   }
   public async getTutorDashboard(tutorId: string): Promise<any> {
     try {
+      // 1. Get tutor's approved courses.
       const courses = await Course.find({ tutorId, courseStatus: "approved" });
       const courseIds = courses.map((course: any) => course.courseId);
       const totalCourses = courses.length;
-      const totalEnrollments = await OrderS.find({
+
+      // ----------------------
+      // 2. Orders Metrics (from OrderS)
+      // ----------------------
+      const totalOrderEnrollments = await OrderS.find({
         courseId: { $in: courseIds },
         orderStatus: "success",
       }).countDocuments();
-      const uniqueStudentsAgg = await OrderS.aggregate([
+
+      const ordersUniqueStudentsAgg = await OrderS.aggregate([
         { $match: { courseId: { $in: courseIds }, orderStatus: "success" } },
         { $group: { _id: "$userId" } },
-        { $count: "totalStudents" },
+        { $group: { _id: null, uniqueCount: { $sum: 1 } } },
       ]);
-      const totalStudents =
-        uniqueStudentsAgg.length > 0 ? uniqueStudentsAgg[0].totalStudents : 0;
-      const revenueAgg = await OrderS.aggregate([
-        {
-          $match: { courseId: { $in: courseIds }, orderStatus: "success" },
-        },
+      const ordersUniqueStudents =
+        ordersUniqueStudentsAgg.length > 0
+          ? ordersUniqueStudentsAgg[0].uniqueCount
+          : 0;
+
+      const ordersRevenueAgg = await OrderS.aggregate([
+        { $match: { courseId: { $in: courseIds }, orderStatus: "success" } },
         {
           $group: {
             _id: null,
             totalRevenue: {
               $sum: {
-                $convert: {
-                  input: "$totalAmount",
-                  to: "double",
-                  onError: 0,
-                },
+                $convert: { input: "$totalAmount", to: "double", onError: 0 },
               },
             },
           },
         },
       ]);
-      const totalRevenue = revenueAgg[0]?.totalRevenue || 0;
+      const ordersRevenue = ordersRevenueAgg[0]?.totalRevenue || 0;
 
+      const orderEnrollmentTrendAgg = await OrderS.aggregate([
+        {
+          $match: { courseId: { $in: courseIds }, orderStatus: "success" },
+        },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]);
+
+      // ----------------------
+      // 3. Membership Orders Metrics (from MembershipOrder)
+      // ----------------------
+      // First, get membership orders that are successful and belong to this tutor.
+      // This uses a lookup to the Memberships collection (which should have a tutorId field)
+      const membershipOrdersAgg = await MembershipOrder.aggregate([
+        { $match: { orderStatus: "success" } },
+        {
+          $lookup: {
+            from: "memberships", // adjust if your memberships collection name is different
+            localField: "membershipId",
+            foreignField: "_id",
+            as: "membershipDetails",
+          },
+        },
+        { $unwind: "$membershipDetails" },
+        { $match: { "membershipDetails.tutorId": tutorId } },
+      ]);
+
+      const totalMembershipEnrollments = membershipOrdersAgg.length;
+      const membershipRevenue = membershipOrdersAgg.reduce(
+        (acc, curr) => acc + curr.totalAmount,
+        0
+      );
+
+      // Get unique students from membership orders.
+      // (Assuming userId is stored in membership orders)
+      const membershipUniqueStudentsSet = new Set(
+        membershipOrdersAgg.map((order) => order.userId.toString())
+      );
+      const membershipUniqueStudents = membershipUniqueStudentsSet.size;
+
+      // ----------------------
+      // 4. Combine Orders and Membership Metrics
+      // ----------------------
+      const totalEnrollments =
+        totalOrderEnrollments + totalMembershipEnrollments;
+      const totalRevenue = ordersRevenue + membershipRevenue;
+      // For unique students, union the two sets:
+      const ordersUniqueStudentsList: string[] = await OrderS.distinct(
+        "userId",
+        {
+          courseId: { $in: courseIds },
+          orderStatus: "success",
+        }
+      );
+      const combinedUniqueStudentsSet = new Set([
+        ...ordersUniqueStudentsList.map(String),
+        ...Array.from(membershipUniqueStudentsSet),
+      ]);
+      const totalStudents = combinedUniqueStudentsSet.size;
+
+      // ----------------------
+      // 5. Enrollment Trend (Combine Orders and Membership Trends)
+      // ----------------------
+      const membershipEnrollmentTrendAgg = await MembershipOrder.aggregate([
+        { $match: { orderStatus: "success" } },
+        {
+          $lookup: {
+            from: "memberships",
+            localField: "membershipId",
+            foreignField: "_id",
+            as: "membershipDetails",
+          },
+        },
+        { $unwind: "$membershipDetails" },
+        { $match: { "membershipDetails.tutorId": tutorId } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]);
+
+      // Merge the two trends (by date)
+      const enrollmentTrendMap = new Map<string, number>();
+      for (const trend of orderEnrollmentTrendAgg) {
+        enrollmentTrendMap.set(trend._id, trend.count);
+      }
+      for (const trend of membershipEnrollmentTrendAgg) {
+        enrollmentTrendMap.set(
+          trend._id,
+          (enrollmentTrendMap.get(trend._id) || 0) + trend.count
+        );
+      }
+      const enrollmentTrend = Array.from(enrollmentTrendMap.entries())
+        .map(([date, count]) => ({ _id: date, count }))
+        .sort((a, b) => a._id.localeCompare(b._id));
+
+      // ----------------------
+      // 6. Progress Metrics (using only course enrollments from users)
+      // ----------------------
       const progressAgg = await userSchema.aggregate([
         { $match: { "courseProgress.courseId": { $in: courseIds } } },
         { $unwind: "$courseProgress" },
@@ -345,21 +502,10 @@ export class ReportsRepository implements ReportInterface {
       }
       const completionRate =
         enrolledCount > 0 ? (completedCount / enrolledCount) * 100 : 0;
-      const enrollmentTrendAgg = await OrderS.aggregate([
-        {
-          $match: { courseId: { $in: courseIds }, orderStatus: "success" },
-        },
-        {
-          $group: {
-            _id: {
-              $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
-            },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]);
 
+      // ----------------------
+      // 7. Return Combined Dashboard Metrics
+      // ----------------------
       return {
         totalCourses,
         totalEnrollments,
@@ -369,7 +515,7 @@ export class ReportsRepository implements ReportInterface {
         enrolledCount,
         completedCount,
         completionRate,
-        enrollmentTrend: enrollmentTrendAgg,
+        enrollmentTrend,
       };
     } catch (err) {
       console.log(err);

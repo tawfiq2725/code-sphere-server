@@ -1,6 +1,7 @@
 import { CategoryInterface } from "../../domain/interface/Category";
 import { Category } from "../../domain/entities/Category";
 import CategoryS from "../database/categorySchema";
+import userSchema from "../database/userSchema";
 export class CategoryRepository implements CategoryInterface {
   public async create(category: Category): Promise<Category> {
     try {
@@ -28,6 +29,25 @@ export class CategoryRepository implements CategoryInterface {
       throw new Error("Something went wrong");
     }
   }
+  public async getRemainingCategories(userId: string): Promise<any> {
+    try {
+      const user = await userSchema.findById(userId);
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const enrolledCategoryIds = user.membership?.categoryId || [];
+      const remainingCategories = await CategoryS.find({
+        _id: { $nin: enrolledCategoryIds },
+      });
+
+      return remainingCategories;
+    } catch (err) {
+      console.log(err);
+      throw new Error("Something went wrong");
+    }
+  }
+
   public async updateCategory(id: string, updates: any): Promise<any> {
     try {
       return await CategoryS.findByIdAndUpdate(id, updates, {

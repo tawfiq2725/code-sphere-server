@@ -20,7 +20,11 @@ export class MembershipOrderRepository implements MembershipOrderInterface {
         membershipOrderId: id,
       })
         .populate("membershipId", "membershipName")
-        .populate("userId", "name email")
+        .populate({
+          path: "userId",
+          select: "name email profile",
+          model: "User",
+        })
         .populate("categoryId", "categoryName");
       return membershipOrder
         ? (membershipOrder.toObject() as unknown as MembershipOrder)

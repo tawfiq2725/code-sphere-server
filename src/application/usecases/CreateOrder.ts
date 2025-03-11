@@ -6,12 +6,16 @@ export class createOrderuseCase {
 
   public async execute(orderData: Omit<Order, "id">): Promise<Order> {
     console.log("starting ---------------9");
-    const { userId } = orderData;
+    const { userId, courseId } = orderData;
     console.log("starting ---------------10");
     console.log(userId);
 
     console.log("starting ---------------11");
-
+    let checkCourse = await this.orderRepository.checkCourse(courseId);
+    console.log(checkCourse);
+    if (!checkCourse) {
+      throw new Error("The course is currently unlisted check back later");
+    }
     const newOrder = new Order(
       orderData.orderId,
       orderData.userId,
@@ -63,7 +67,9 @@ export class verifyOrderuseCase {
 export class getOrderByIduseCase {
   constructor(private orderRepository: OrderInterface) {}
 
-  public async execute(userId: string): Promise<Order[] | null> {
+  public async execute(
+    userId: string
+  ): Promise<{ orders: any[]; membershipOrders: any[] } | null> {
     console.log("starting ---------------9");
     console.log(userId);
     console.log("starting ---------------10");

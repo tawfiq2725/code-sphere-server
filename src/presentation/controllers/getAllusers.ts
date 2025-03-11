@@ -232,7 +232,7 @@ export const toggleCourse = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { isVisible } = req.body;
-
+    console.log(isVisible);
     const courseRepo = new CourseRepositoryImpl();
     const existingCourse = await courseRepo.findCourseByGenerateId(id);
 
@@ -248,6 +248,7 @@ export const toggleCourse = async (req: Request, res: Response) => {
     const updatedCourse = {
       isVisible,
     };
+    console.log(updatedCourse);
 
     const course = await courseRepo.updateCourse(id, updatedCourse);
     return sendResponseJson(

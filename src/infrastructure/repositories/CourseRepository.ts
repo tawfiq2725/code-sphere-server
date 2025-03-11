@@ -69,7 +69,7 @@ export class CourseRepositoryImpl implements CourseInterface {
     course: Partial<Course>
   ): Promise<Course | null> {
     try {
-      console.log("updating course", id);
+      console.log("updating course", id, course);
       return await CourseS.findOneAndUpdate({ courseId: id }, course, {
         new: true,
       });

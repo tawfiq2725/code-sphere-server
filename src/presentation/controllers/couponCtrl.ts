@@ -3,6 +3,7 @@ import {
   updateCouponUsecase,
   getAllCouponsUsecase,
   toggleCouponUsecase,
+  deleteCouponUsecase,
 } from "../../application/usecases/Coupons";
 import { Request, Response } from "express";
 import sendResponseJson from "../../utils/message";
@@ -120,6 +121,29 @@ export const toggleCoupon = async (
       "Internal Server Error",
       false,
       error
+    );
+  }
+};
+
+export const deleteCoupon = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const couponRepo = new CouponRepository();
+    const couponUseCase = new deleteCouponUsecase(couponRepo);
+    const coupon = await couponUseCase.execute(id);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Coupon Deleted Successfully",
+      true,
+      coupon
+    );
+  } catch (err: any) {
+    return sendResponseJson(
+      res,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+      err.message,
+      false
     );
   }
 };

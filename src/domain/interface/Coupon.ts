@@ -6,4 +6,5 @@ export interface CouponInterface {
   getAllCoupons(): Promise<Coupons[]>;
   toggleCoupon(id: string): Promise<Coupons | null>;
   isCouponNameExists(code: string): Promise<Boolean>;
+  deleteCoupon(id: string): Promise<any>;
 }

@@ -461,11 +461,8 @@ export const updateUserProfileImage = async (
 export const verifyCoupon = async (req: Request, res: Response) => {
   try {
     const { couponCode, userId } = req.body;
-    console.log(couponCode, userId);
     const couponRepo = new CouponRepository();
-    console.log("starting----------------1");
     let coupon = await couponRepo.findCouponByCouponCode(couponCode);
-    console.log("starting----------------2");
 
     if (!coupon) {
       return sendResponseJson(
@@ -477,18 +474,15 @@ export const verifyCoupon = async (req: Request, res: Response) => {
     }
     console.log("starting----------------3");
 
-    const alreadyUsed = coupon?.usedBy?.find(
-      (usage) => usage.userId === userId
-    );
-    console.log("starting----------------4");
-
-    if (alreadyUsed) {
-      return sendResponseJson(
+    const couponCheck = await couponRepo.checkAlreayused(userId, couponCode);
+    if (couponCheck) {
+      sendResponseJson(
         res,
         HttpStatus.BAD_REQUEST,
-        "Coupon already used",
+        "Coupon Alreay Used",
         false
       );
+      return;
     }
     console.log("starting----------------5");
 

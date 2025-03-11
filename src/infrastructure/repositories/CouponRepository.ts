@@ -1,6 +1,7 @@
 import CouponS from "../database/CouponSchema";
 import { Coupons } from "../../domain/entities/Coupons";
 import { ICoupon, IUsedBy } from "../database/CouponSchema";
+import Order from "../database/orderSchema";
 
 export class CouponRepository {
   private convertToCoupons(coupon: ICoupon | null): Coupons | null {
@@ -92,6 +93,19 @@ export class CouponRepository {
     } catch (err) {
       console.log(err);
       return null;
+    }
+  }
+
+  public async checkAlreayused(
+    userId: string,
+    couponId: string
+  ): Promise<boolean> {
+    try {
+      const find = await Order.findOne({ userId, couponCode: couponId });
+      return !!find;
+    } catch (err) {
+      console.log(err);
+      throw new Error("Internal server error");
     }
   }
 }

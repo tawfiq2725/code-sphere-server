@@ -235,6 +235,8 @@ export const getMembershipOrderById = async (req: Request, res: Response) => {
     const membershipRepo = new MembershipOrderRepository();
     const { id } = req.params;
     const membership = await membershipRepo.findMembershipOrderById(id);
+    let profileUrl = await getUrl((membership?.userId as any).profile);
+    (membership?.userId as any).profile = profileUrl;
     if (!membership) {
       return sendResponseJson(
         res,

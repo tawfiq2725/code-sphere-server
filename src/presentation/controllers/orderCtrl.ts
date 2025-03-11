@@ -18,7 +18,6 @@ import {
   verifyOrderMembershipUsecase,
 } from "../../application/usecases/MembershipUsecase";
 import { MembershipOrderRepository } from "../../infrastructure/repositories/MembershipOrder";
-import { MembershipRepository } from "../../infrastructure/repositories/MembershipRepository";
 
 export const createOrder = async (
   req: Request,
@@ -67,11 +66,11 @@ export const createOrder = async (
       order,
       orderId: generateOrderId,
     });
-  } catch (error) {
+  } catch (error: any) {
     return sendResponseJson(
       res,
       HttpStatus.BAD_REQUEST,
-      "Order Failed",
+      error.message,
       false,
       error
     );

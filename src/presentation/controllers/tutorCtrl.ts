@@ -94,8 +94,12 @@ export const enrollStudents = async (req: Request, res: Response) => {
     const { id } = req.params;
     const repo = new UserRepository();
     const students = await repo.getEnrollStudents(id);
-    for (let student of students) {
-      student.profile = await getUrl(student.profile);
+    if (students) {
+      for (let student of students) {
+        if (student.profile) {
+          student.profile = await getUrl(student.profile);
+        }
+      }
     }
     return sendResponseJson(
       res,
@@ -185,14 +189,18 @@ export const myCourses = async (req: Request, res: Response) => {
 };
 
 export const tutorDashboard = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const repo = new ReportsRepository();
-  const tutorDatas = await repo.getTutorDashboard(id);
-  return sendResponseJson(
-    res,
-    HttpStatus.OK,
-    "Tutor Dashboards",
-    true,
-    tutorDatas
-  );
+  try {
+    const { id } = req.params;
+    const repo = new ReportsRepository();
+    const tutorDatas = await repo.getTutorDashboard(id);
+    return sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Tutor Dashboards",
+      true,
+      tutorDatas
+    );
+  } catch (err: any) {
+    return sendResponseJson(res, HttpStatus.BAD_REQUEST, err.message, false);
+  }
 };

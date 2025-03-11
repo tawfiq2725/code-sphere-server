@@ -53,6 +53,22 @@ export const getAllCategory = async (req: Request, res: Response) => {
     sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
 };
+export const getAllCategoryCheck = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const repository = new CategoryRepository();
+    const categories = await repository.getRemainingCategories(id);
+    sendResponseJson(
+      res,
+      HttpStatus.OK,
+      "Categories fetched",
+      true,
+      categories
+    );
+  } catch (error: any) {
+    sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+  }
+};
 
 export const getCategory = async (req: Request, res: Response) => {
   try {
