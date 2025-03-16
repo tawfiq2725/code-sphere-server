@@ -20,4 +20,6 @@ export const configFrontend = {
     process.env.NODE_ENV === "production"
       ? process.env.FRONTEND_URL_PRODUCTION
       : process.env.FRONTEND_URL_DEVELOPMENT,
+  frontendUrlProd: process.env.FRONTEND_URL_PRODUCTION,
+  frontendUrlProdNew: process.env.FRONTEND_URL_PRODUCTION_NEW,
 };

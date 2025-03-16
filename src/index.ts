@@ -1,4 +1,4 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { createServer } from "http";
 import { config } from "dotenv";
 import cors from "cors";
@@ -16,11 +16,30 @@ import { initSocket } from "./config/socketConfig";
 config();
 const PORT = process.env.APP_PORT || 4000;
 
+const allowOrigins = [
+  configFrontend.frontendUrl,
+  configFrontend.frontendUrlProd,
+  configFrontend.frontendUrlProdNew,
+];
+
 const corsOptions = {
-  origin: configFrontend.frontendUrl,
+  origin: function (origin: string | undefined, callback: Function) {
+    if (!origin || allowOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+  ],
   credentials: true,
+  optionsSuccessStatus: 200,
 };
 
 const app = express();
