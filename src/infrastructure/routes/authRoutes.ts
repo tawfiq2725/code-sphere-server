@@ -56,8 +56,13 @@ router.get(
   verifyToken(["student", "tutor", "admin"]),
   userControllerDI.logout.bind(userControllerDI)
 );
+router.get(
+  "/get-memberships",
+  membershiCtrlDI.getMemberships.bind(membershiCtrlDI)
+);
 // protected routes
 router.use(verifyToken(["student"]));
+
 router.get("/get-profile", userControllerDI.getProfile.bind(userControllerDI));
 router.get(
   "/api/user/find-user/:id",
