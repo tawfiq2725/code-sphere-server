@@ -51,6 +51,10 @@ router.post(
 );
 router.get("/api/offers", offerCtrlDI.getOffers.bind(offerCtrlDI));
 router.get(
+  "/get-memberships",
+  membershiCtrlDI.getMemberships.bind(membershiCtrlDI)
+);
+router.get(
   "/api/user/find-user/:id",
   userControllerDI.getUserById.bind(userControllerDI)
 );
@@ -58,10 +62,6 @@ router.get(
   "/logout",
   verifyToken(["student", "tutor", "admin"]),
   userControllerDI.logout.bind(userControllerDI)
-);
-router.get(
-  "/get-memberships",
-  membershiCtrlDI.getMemberships.bind(membershiCtrlDI)
 );
 router.get("/get-courses/:id", courseCtrlDI.GetallCourses.bind(courseCtrlDI));
 router.get("/get-course-data", courseCtrlDI.GetallCourse.bind(courseCtrlDI));
