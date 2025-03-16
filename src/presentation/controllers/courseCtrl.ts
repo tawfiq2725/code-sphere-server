@@ -140,9 +140,7 @@ export class CourseCtrl {
         sendResponseJson(res, HttpStatus.NOT_FOUND, "Course not found", false);
         return;
       }
-      if (course.thumbnail) {
-        course.thumbnail = await getUrl(course.thumbnail);
-      }
+
       sendResponseJson(res, HttpStatus.OK, "Course fetched", true, course);
     } catch (error: any) {
       sendResponseJson(

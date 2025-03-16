@@ -6,6 +6,9 @@ import { userControllerDI } from "../../presentation/container/user";
 import { otpControllerDI } from "../../presentation/container/otp";
 import { offerCtrlDI } from "../../presentation/container/offer";
 import { membershiCtrlDI } from "../../presentation/container/membership";
+import { courseCtrlDI } from "../../presentation/container/course";
+import { categoryCtrlDI } from "../../presentation/container/category";
+import { chapterCtrlDI } from "../../presentation/container/chapter";
 
 const router = express.Router();
 
@@ -60,6 +63,21 @@ router.get(
   "/get-memberships",
   membershiCtrlDI.getMemberships.bind(membershiCtrlDI)
 );
+router.get("/get-courses/:id", courseCtrlDI.GetallCourses.bind(courseCtrlDI));
+router.get("/get-course-data", courseCtrlDI.GetallCourse.bind(courseCtrlDI));
+router.get(
+  "/get-category/:id",
+  categoryCtrlDI.getCategory.bind(categoryCtrlDI)
+);
+router.get(
+  "/get-category-all",
+  categoryCtrlDI.getAllCategory.bind(categoryCtrlDI)
+);
+router.get(
+  "/get-chapter-front/:courseId",
+  chapterCtrlDI.getChapter.bind(chapterCtrlDI)
+);
+
 // protected routes
 router.use(verifyToken(["student"]));
 
