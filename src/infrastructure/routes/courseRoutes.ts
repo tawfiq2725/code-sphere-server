@@ -22,7 +22,10 @@ router.get(
   "/get-chapter-front/:courseId",
   chapterCtrlDI.getChapter.bind(chapterCtrlDI)
 );
-
+router.get(
+  "/get-course/:courseId",
+  courseCtrlDI.GetcourseByGenerateId.bind(courseCtrlDI)
+);
 router.use(verifyToken(["admin", "student", "tutor"]));
 
 router.post(

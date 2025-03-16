@@ -41,7 +41,7 @@ export const authenticateUser = (
     role: refreshPayload.role,
   });
 
-  res.setHeader("x-access-token", newAccessToken);
+  res.setHeader("Authorization", `Bearer ${newAccessToken}`);
   req.user = refreshPayload;
 
   return next();
