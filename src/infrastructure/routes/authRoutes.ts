@@ -60,7 +60,7 @@ router.get(
 );
 router.get(
   "/logout",
-  verifyToken(["student", "tutor", "admin"]),
+  // verifyToken(["student", "tutor", "admin"]),
   userControllerDI.logout.bind(userControllerDI)
 );
 router.get("/get-courses/:id", courseCtrlDI.GetallCourses.bind(courseCtrlDI));
