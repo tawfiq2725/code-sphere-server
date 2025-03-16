@@ -1,206 +1,160 @@
 import { config } from "dotenv";
 config();
 import { Request, Response } from "express";
-import { UserRepository } from "../../infrastructure/repositories/UserRepository";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { UpdateProfileService } from "../../application/services/updateProfile";
 import { approveCertificateUsecase } from "../../application/usecases/userLists";
-import { FileUploadService } from "../../application/services/filesUpload";
 import {
   getmyCoursesUsecase,
   getStudentsUsecase,
 } from "../../application/usecases/loginUser";
 import { getUrl } from "../../utils/getUrl";
-import { ReportsRepository } from "../../infrastructure/repositories/ReportsRepository";
 
-export const updateProfile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const updatesData = req.body;
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
+export class TutorController {
+  constructor(
+    private uploadTutorService: UpdateProfileService,
+    private Certificates: approveCertificateUsecase,
+    private Students: getStudentsUsecase,
+    private getCourse: getmyCoursesUsecase
+  ) {}
+  public async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const updatesData = req.body;
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      };
 
-    const profilePhoto = files?.profileImage?.[0];
-    const certificates = files?.certificates || [];
+      const profilePhoto = files?.profileImage?.[0];
+      const certificates = files?.certificates || [];
+      const updatedUser = await this.uploadTutorService.updateProfile({
+        updatesData,
+        files: { profilePhoto, certificates },
+      });
 
-    const updateProfileService = new UpdateProfileService();
-
-    const updatedUser = await updateProfileService.updateProfile({
-      updatesData,
-      files: { profilePhoto, certificates },
-    });
-
-    if (updatedUser.profile) {
-      updatedUser.profile = await getUrl(updatedUser.profile);
-    }
-
-    if (updatedUser.certificates) {
-      for (let certificate of updatedUser.certificates) {
-        certificate = await getUrl(certificate);
+      if (updatedUser.profile) {
+        updatedUser.profile = await getUrl(updatedUser.profile);
       }
-    }
 
-    sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Profile updated successfully",
-      true,
-      updatedUser
-    );
-  } catch (error: any) {
-    console.error("Error updating profile:", error);
-    res
-      .status(500)
-      .json({ success: false, message: error.message || "Server error" });
-  }
-};
+      if (updatedUser.certificates) {
+        for (let certificate of updatedUser.certificates) {
+          certificate = await getUrl(certificate);
+        }
+      }
 
-export const getTutorCertificates = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const userRepository = new UserRepository();
-    const id = req.params.id;
-    console.log("check this id", id);
-    const user = await userRepository.findById(id);
-    console.log("check this user", user);
-    if (user && user.certificates) {
-      user.certificates = await Promise.all(
-        user.certificates.map((certificate) => getUrl(certificate))
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Profile updated successfully",
+        true,
+        updatedUser
       );
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message,
+        false
+      );
+    }
+  }
 
+  public async getTutorCertificates(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const id = req.params.id;
+      const certificates = await this.Certificates.exeGetCertificates(id);
       sendResponseJson(
         res,
         HttpStatus.OK,
         "Tutor Certificates",
         true,
-        user.certificates
+        certificates
       );
-    } else {
-      sendResponseJson(res, HttpStatus.NOT_FOUND, "User not found", false);
+    } catch (error: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
     }
-  } catch (error: any) {
-    sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
-};
 
-export const enrollStudents = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const repo = new UserRepository();
-    const students = await repo.getEnrollStudents(id);
-    if (students) {
-      for (let student of students) {
-        if (student.profile) {
-          student.profile = await getUrl(student.profile);
-        }
+  public async enrollStudents(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const students = await this.Certificates.exeEnrollstudents(id);
+      sendResponseJson(res, HttpStatus.OK, "Enrolled Students", true, students);
+    } catch (error: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+    }
+  }
+  public async approveCourseCertificate(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const { tutorName, studentId, courseId } = req.body;
+      const pdf = req.file;
+      if (!pdf) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "No PDF file uploaded",
+          false
+        );
+        return;
       }
-    }
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Enrolled Students",
-      true,
-      students
-    );
-  } catch (error: any) {
-    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
-  }
-};
-
-export const approveCourseCertificate = async (req: Request, res: Response) => {
-  try {
-    console.log("starting................................1");
-    const { tutorName, studentId, courseId } = req.body;
-    console.log("starting................................2");
-
-    const pdf = req.file;
-    console.log("starting................................3");
-    console.log("check this pdf", pdf);
-
-    if (!pdf) {
-      return sendResponseJson(
+      const result = await this.Certificates.execute({
+        tutorName,
+        studentId,
+        courseId,
+        pdf,
+      });
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "No PDF file uploaded",
-        false
+        HttpStatus.OK,
+        "Certificate Approved",
+        true,
+        result
       );
+    } catch (error: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
     }
-
-    const repo = new UserRepository();
-    console.log("starting................................4");
-    const fileUploadservice = new FileUploadService();
-    console.log("starting................................5");
-    const approve = new approveCertificateUsecase(repo, fileUploadservice);
-    console.log("starting................................6");
-
-    const result = await approve.execute({
-      tutorName,
-      studentId,
-      courseId,
-      pdf,
-    });
-    console.log("final");
-
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Certificate Approved",
-      true,
-      result
-    );
-  } catch (error: any) {
-    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
-};
 
-export const getStudents = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const repo = new UserRepository();
-    const getUserusecase = new getStudentsUsecase(repo);
-    const students = await getUserusecase.execute(id);
-
-    return sendResponseJson(res, HttpStatus.OK, "Students", true, students);
-  } catch (error: any) {
-    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
-  }
-};
-export const myCourses = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const repo = new UserRepository();
-    const getUserusecase = new getmyCoursesUsecase(repo);
-    const students = await getUserusecase.execute(id);
-    for (let student of students) {
-      if (student.thumbnail) {
-        student.thumbnail = await getUrl(student.thumbnail);
-      }
+  public async getStudents(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const students = await this.Students.execute(id);
+      sendResponseJson(res, HttpStatus.OK, "Students", true, students);
+    } catch (error: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
     }
-    return sendResponseJson(res, HttpStatus.OK, "Students", true, students);
-  } catch (error: any) {
-    return sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
   }
-};
 
-export const tutorDashboard = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const repo = new ReportsRepository();
-    const tutorDatas = await repo.getTutorDashboard(id);
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Tutor Dashboards",
-      true,
-      tutorDatas
-    );
-  } catch (err: any) {
-    return sendResponseJson(res, HttpStatus.BAD_REQUEST, err.message, false);
+  public async myCourses(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const students = await this.getCourse.execute(id);
+      sendResponseJson(res, HttpStatus.OK, "Students", true, students);
+    } catch (error: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+    }
   }
-};
+
+  public async tutorDashboard(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const tutorDatas = await this.Students.exeGetDashboard(id);
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Tutor Dashboards",
+        true,
+        tutorDatas
+      );
+    } catch (err: any) {
+      sendResponseJson(res, HttpStatus.BAD_REQUEST, err.message, false);
+    }
+  }
+}

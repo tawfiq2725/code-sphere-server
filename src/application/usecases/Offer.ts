@@ -6,7 +6,6 @@ export class OfferUseCase {
   constructor(private offerRepo: IOfferRepository) {}
 
   async createOffer(offer: Offer): Promise<Offer> {
-    console.log(offer);
     let existCategory = await this.offerRepo.getOfferbyCategory(
       offer.categoryId
     );

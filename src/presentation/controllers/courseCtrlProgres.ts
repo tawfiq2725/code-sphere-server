@@ -4,7 +4,10 @@ import { UserRepository } from "../../infrastructure/repositories/UserRepository
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 
-export const updateCourseProgress = async (req: Request, res: Response) => {
+export const updateCourseProgress = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   const { userId, chapterId, courseId } = req.body;
 
   try {
@@ -14,10 +17,10 @@ export const updateCourseProgress = async (req: Request, res: Response) => {
 
     const result = await courseUsecase.execute(courseData);
 
-    return sendResponseJson(res, HttpStatus.OK, result.message, true);
+    sendResponseJson(res, HttpStatus.OK, result.message, true);
   } catch (error: any) {
     console.error(error);
-    return sendResponseJson(
+    sendResponseJson(
       res,
       HttpStatus.INTERNAL_SERVER_ERROR,
       "Failed to update course progress",

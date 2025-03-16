@@ -3,7 +3,7 @@ import { Server as HttpServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import dotenv from "dotenv";
 import ChatModel from "../infrastructure/database/chatSchema";
-import UserModel from "../infrastructure/database/userSchema"; // Importing your User model
+import UserModel from "../infrastructure/database/userSchema";
 
 dotenv.config();
 
@@ -17,23 +17,17 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
-
     socket.on("register", (data) => {
       const { type, id } = data;
       if (type === "tutor") {
         socket.join(`tutor:${id}`);
-        console.log(`tutor ${id} joined room tutor:${id}`);
       } else if (type === "student") {
         socket.join(`student:${id}`);
-        console.log(`student ${id} joined room student:${id}`);
       }
     });
 
-    // Handle joining a chat room
     socket.on("join:chat", async (data) => {
       try {
-        // First check if either user is blocked
         const isBlocked = await checkIfBlocked(data.userId, data.tutorId);
         if (isBlocked.blocked) {
           socket.emit("chat:blocked", {
@@ -57,7 +51,7 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
 
         const chatId = chat._id.toString();
         socket.join(chatId);
-        console.log(`Socket ${socket.id} joined chat room ${chatId}`);
+
         socket.emit("chat:history", chat);
       } catch (error) {
         console.error("Error joining chat:", error);
@@ -67,7 +61,6 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
 
     // Handle sending a message
     socket.on("message:send", async (data) => {
-      console.log("Received message:", data);
       try {
         let chat = await ChatModel.findById(data.chatId);
         if (!chat) {
@@ -75,8 +68,6 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
           return;
         }
 
-        // Check for blocked status before sending message
-        // This ensures real-time blocking even if the chat was already joined
         const isBlocked = await checkIfBlocked(
           chat.userId.toString(),
           chat.tutorId.toString()
@@ -136,22 +127,18 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
   return io;
 };
 
-// Helper function to check if either user is blocked
 async function checkIfBlocked(
   userId: string,
   tutorId: string
 ): Promise<{ blocked: boolean; blockedEntity: string }> {
   try {
-    // Get both user and tutor documents to check their blocked status
     const user = await UserModel.findById(userId);
-    const tutor = await UserModel.findById(tutorId); // Using UserModel since tutors are in the same collection
-
+    const tutor = await UserModel.findById(tutorId);
     if (!user || !tutor) {
       console.error("User or tutor not found during block check");
       return { blocked: false, blockedEntity: "" };
     }
 
-    // Check if either is blocked by admin
     if (user.isBlocked) {
       return { blocked: true, blockedEntity: "the student" };
     }
@@ -163,6 +150,6 @@ async function checkIfBlocked(
     return { blocked: false, blockedEntity: "" };
   } catch (error) {
     console.error("Error checking blocked status:", error);
-    return { blocked: false, blockedEntity: "" }; // Default to not blocked in case of error
+    return { blocked: false, blockedEntity: "" };
   }
 }

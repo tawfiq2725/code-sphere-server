@@ -1,6 +1,6 @@
 import { UserInterface } from "../../domain/interface/User";
 import { Person } from "../../domain/entities/User";
-
+import bcrypt from "bcryptjs";
 import { admin } from "../../firebase";
 
 import {
@@ -8,10 +8,12 @@ import {
   generateRefreshToken,
   TokenPayload,
 } from "../../utils/tokenUtility";
-import { AwsConfig } from "../../config/awsConfig";
 import { FileUploadService } from "../services/filesUpload";
 import { Course } from "../../domain/entities/Course";
 import { getUrl } from "../../utils/getUrl";
+import { GenerateOtp } from "./generateOtp";
+import { sendOtpEmail } from "../services/OtpService";
+import { ReportInterface } from "../../domain/interface/Report";
 
 export class LoginUser {
   constructor(private userRepository: UserInterface) {}
@@ -20,10 +22,7 @@ export class LoginUser {
     email: string,
     password: string
   ): Promise<{ user: Person; accessToken: string; refreshToken: string }> {
-    console.log("email", email);
-    console.log("password", password);
     const user = await this.userRepository.findByEmail(email);
-    console.log("user", user);
     if (!user) {
       throw new Error("User not found");
     }
@@ -44,9 +43,6 @@ export class LoginUser {
     };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
-    console.log("accessToken", accessToken);
-    console.log("refreshToken", refreshToken);
-    console.log("user profile ", user.profile);
     if (user.profile) {
       const fileName = user.profile.split("/").pop()!;
       const folder = user.profile.substring(
@@ -58,6 +54,18 @@ export class LoginUser {
       user.profile = presignedUrl;
     }
     return { user, accessToken, refreshToken };
+  }
+
+  public async executeGetuser(id: string): Promise<Person> {
+    try {
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }
 
@@ -93,23 +101,28 @@ export class GoogleAuth {
         userData.profile = picture;
       }
 
-      const { user, isNewUser } = await this.userRepository.googleAuthLogin(
-        userData
-      );
+      const res = await this.userRepository.googleAuthLogin(userData);
+
       const payload: TokenPayload = {
-        id: user._id || "",
-        email: user.email,
-        role: user.role,
+        id: res.user._id || "",
+        email: res.user.email,
+        role: res.user.role,
       };
-      if (!isNewUser) {
+      if (!res.isNewUser) {
         const accessToken = generateAccessToken(payload);
         const refreshToken = generateRefreshToken(payload);
-        console.log("accessToken", accessToken);
-        console.log("refreshToken", refreshToken);
-        return { user, isNewUser, accessToken, refreshToken };
+        const profile = String(res.user.profile);
+        if (profile.startsWith("user") || profile.startsWith("tutor")) {
+          res.user.profile = await getUrl(profile);
+        }
+        return {
+          user: res.user,
+          isNewUser: res.isNewUser,
+          accessToken,
+          refreshToken,
+        };
       } else {
-        console.log("User created successfully. Proceeding to role selection.");
-        return { user, isNewUser };
+        return { user: res.user, isNewUser: res.isNewUser };
       }
     } catch (error) {
       console.error("Google Auth Error:", error);
@@ -135,8 +148,6 @@ export class setRole {
     };
     const accessToken = generateAccessToken(payload);
     const refreshToken = generateRefreshToken(payload);
-    console.log("accessToken", accessToken);
-    console.log("refreshToken", refreshToken);
 
     return { user: userData, accessToken, refreshToken };
   }
@@ -164,7 +175,10 @@ export class getTutorUsecasae {
 }
 
 export class getStudentsUsecase {
-  constructor(private userRepository: UserInterface) {}
+  constructor(
+    private userRepository: UserInterface,
+    private reportRepo: ReportInterface
+  ) {}
 
   public async execute(id: string): Promise<Person[]> {
     const students = await this.userRepository.getUsers(id);
@@ -183,6 +197,17 @@ export class getStudentsUsecase {
 
     return students;
   }
+
+  public async exeGetDashboard(id: string): Promise<any> {
+    try {
+      if (!id) {
+        throw new Error("Id is Important");
+      }
+      return await this.reportRepo.getTutorDashboard(id);
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
 }
 export class getmyCoursesUsecase {
   constructor(private userRepository: UserInterface) {}
@@ -192,16 +217,10 @@ export class getmyCoursesUsecase {
     if (!courses) return [];
     for (let course of courses) {
       if (course.thumbnail) {
-        const fileName = course.thumbnail.split("/").pop()!;
-        const folder = course.thumbnail.substring(
-          0,
-          course.thumbnail.lastIndexOf("/") + 1
-        );
-        const aws = new FileUploadService();
-        const presignedUrl = await aws.getPresignedUrl(fileName, folder);
-        course.thumbnail = presignedUrl;
+        course.thumbnail = await getUrl(course.thumbnail);
       }
     }
+
     return courses;
   }
 }
@@ -222,8 +241,7 @@ export class getProfileUsecase {
         0,
         user.profile.lastIndexOf("/") + 1
       );
-      console.log(fileName);
-      console.log(folder);
+
       const presignedUrl = await this.awsgetFile.getPresignedUrl(
         fileName,
         folder
@@ -236,7 +254,83 @@ export class getProfileUsecase {
         user.certificates.map((certificate) => getUrl(certificate))
       );
     }
-    console.log("user profile", user.profile);
     return user;
+  }
+  public async exeUpdateProfile(
+    userId: string,
+    profileImage: Express.Multer.File
+  ): Promise<Person> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const imageKey = await this.awsgetFile.uploadUserProfileImage(
+        userId,
+        profileImage
+      );
+      user.profile = imageKey;
+      await this.userRepository.update(userId, user);
+
+      if (user.profile) {
+        user.profile = await getUrl(user.profile);
+      }
+      return user;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+}
+
+export class PasswordUsecase {
+  constructor(
+    private userRepository: UserInterface,
+    private otpUse: GenerateOtp
+  ) {}
+  public async executeNewPassword(
+    email: string,
+    password: string,
+    confirm: string
+  ): Promise<Person> {
+    if (password !== confirm) {
+      throw new Error("Password Not Matched");
+    }
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error("User Not Found");
+    }
+    user.password = password;
+    await user.hashPassword();
+    if (user._id) await this.userRepository.update(user._id, user);
+    return user;
+  }
+  public async executeOtp(email: string): Promise<void> {
+    let user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error("User Not Found");
+    }
+    let otp = await this.otpUse.execute(email);
+    await sendOtpEmail(email, otp);
+  }
+  public async exechangePassword(
+    oldPassword: string,
+    newPassword: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new Error("User not found");
+      }
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        throw new Error("Old password does not match");
+      }
+      user.password = newPassword;
+      await user.hashPassword();
+      await this.userRepository.update(userId, user);
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }

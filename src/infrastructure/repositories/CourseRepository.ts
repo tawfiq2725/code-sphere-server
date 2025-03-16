@@ -4,8 +4,6 @@ import CourseS from "../database/courseSchema";
 export class CourseRepositoryImpl implements CourseInterface {
   public async create(course: Course): Promise<any> {
     try {
-      console.log("creating course", course);
-      console.log("creating course", course);
       return await CourseS.create(course);
     } catch (err) {
       console.log(err);
@@ -14,7 +12,6 @@ export class CourseRepositoryImpl implements CourseInterface {
   }
   public async findCourseById(id: string): Promise<Course | null> {
     try {
-      console.log("finding course by id", id);
       return await CourseS.findById(id);
     } catch (err) {
       console.log(err);
@@ -25,7 +22,6 @@ export class CourseRepositoryImpl implements CourseInterface {
     generateId: string
   ): Promise<Course | null> {
     try {
-      console.log("finding course by generate id", generateId);
       return await CourseS.findOne({ courseId: generateId });
     } catch (err) {
       console.log(err);
@@ -69,7 +65,6 @@ export class CourseRepositoryImpl implements CourseInterface {
     course: Partial<Course>
   ): Promise<Course | null> {
     try {
-      console.log("updating course", id, course);
       return await CourseS.findOneAndUpdate({ courseId: id }, course, {
         new: true,
       });

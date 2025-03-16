@@ -330,14 +330,10 @@ export class ReportsRepository implements ReportInterface {
   }
   public async getTutorDashboard(tutorId: string): Promise<any> {
     try {
-      // 1. Get tutor's approved courses.
       const courses = await Course.find({ tutorId, courseStatus: "approved" });
       const courseIds = courses.map((course: any) => course.courseId);
       const totalCourses = courses.length;
 
-      // ----------------------
-      // 2. Orders Metrics (from OrderS)
-      // ----------------------
       const totalOrderEnrollments = await OrderS.find({
         courseId: { $in: courseIds },
         orderStatus: "success",
@@ -380,17 +376,11 @@ export class ReportsRepository implements ReportInterface {
         },
         { $sort: { _id: 1 } },
       ]);
-
-      // ----------------------
-      // 3. Membership Orders Metrics (from MembershipOrder)
-      // ----------------------
-      // First, get membership orders that are successful and belong to this tutor.
-      // This uses a lookup to the Memberships collection (which should have a tutorId field)
       const membershipOrdersAgg = await MembershipOrder.aggregate([
         { $match: { orderStatus: "success" } },
         {
           $lookup: {
-            from: "memberships", // adjust if your memberships collection name is different
+            from: "memberships",
             localField: "membershipId",
             foreignField: "_id",
             as: "membershipDetails",
@@ -406,20 +396,14 @@ export class ReportsRepository implements ReportInterface {
         0
       );
 
-      // Get unique students from membership orders.
-      // (Assuming userId is stored in membership orders)
       const membershipUniqueStudentsSet = new Set(
         membershipOrdersAgg.map((order) => order.userId.toString())
       );
       const membershipUniqueStudents = membershipUniqueStudentsSet.size;
 
-      // ----------------------
-      // 4. Combine Orders and Membership Metrics
-      // ----------------------
       const totalEnrollments =
         totalOrderEnrollments + totalMembershipEnrollments;
       const totalRevenue = ordersRevenue + membershipRevenue;
-      // For unique students, union the two sets:
       const ordersUniqueStudentsList: string[] = await OrderS.distinct(
         "userId",
         {
@@ -433,9 +417,6 @@ export class ReportsRepository implements ReportInterface {
       ]);
       const totalStudents = combinedUniqueStudentsSet.size;
 
-      // ----------------------
-      // 5. Enrollment Trend (Combine Orders and Membership Trends)
-      // ----------------------
       const membershipEnrollmentTrendAgg = await MembershipOrder.aggregate([
         { $match: { orderStatus: "success" } },
         {
@@ -457,7 +438,6 @@ export class ReportsRepository implements ReportInterface {
         { $sort: { _id: 1 } },
       ]);
 
-      // Merge the two trends (by date)
       const enrollmentTrendMap = new Map<string, number>();
       for (const trend of orderEnrollmentTrendAgg) {
         enrollmentTrendMap.set(trend._id, trend.count);
@@ -472,9 +452,6 @@ export class ReportsRepository implements ReportInterface {
         .map(([date, count]) => ({ _id: date, count }))
         .sort((a, b) => a._id.localeCompare(b._id));
 
-      // ----------------------
-      // 6. Progress Metrics (using only course enrollments from users)
-      // ----------------------
       const progressAgg = await userSchema.aggregate([
         { $match: { "courseProgress.courseId": { $in: courseIds } } },
         { $unwind: "$courseProgress" },
@@ -502,10 +479,6 @@ export class ReportsRepository implements ReportInterface {
       }
       const completionRate =
         enrolledCount > 0 ? (completedCount / enrolledCount) * 100 : 0;
-
-      // ----------------------
-      // 7. Return Combined Dashboard Metrics
-      // ----------------------
       return {
         totalCourses,
         totalEnrollments,

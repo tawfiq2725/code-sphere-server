@@ -7,210 +7,208 @@ import {
   RevenueUseCase,
   topTutorsUsecase,
 } from "../../application/usecases/Reports";
-import { ReportsRepository } from "../../infrastructure/repositories/ReportsRepository";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 
-export const getReportsOrders = async (req: Request, res: Response) => {
-  try {
-    let { startDate, endDate } = req.query;
+export class ReportController {
+  constructor(
+    private reportUsecase: ReportsUseCase,
+    private dashboardUsecase: DashboardUseCase,
+    private enrollUsecase: EnrollCourseUseCase,
+    private memberhsipUsecase: membershipReportUsecase,
+    private revenueUsecase: RevenueUseCase,
+    private toptutorUsecase: topTutorsUsecase
+  ) {}
+  public async getReportsOrders(req: Request, res: Response): Promise<void> {
+    try {
+      let { startDate, endDate } = req.query;
 
-    // If startDate or endDate is an array, pick the first element
-    if (Array.isArray(startDate)) startDate = startDate[0];
-    if (Array.isArray(endDate)) endDate = endDate[0];
+      if (Array.isArray(startDate)) startDate = startDate[0];
+      if (Array.isArray(endDate)) endDate = endDate[0];
 
-    if (typeof startDate !== "string" || typeof endDate !== "string") {
-      return sendResponseJson(
+      if (typeof startDate !== "string" || typeof endDate !== "string") {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid date format",
+          false
+        );
+        return;
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid date provided",
+          false
+        );
+        return;
+      }
+      const orders = await this.reportUsecase.execute(start, end);
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Invalid date format",
+        HttpStatus.OK,
+        "Reports fetched successfully",
+        true,
+        orders
+      );
+    } catch (err: any) {
+      console.log(err);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
         false
       );
     }
+  }
+  public async getReportsMembersOrders(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      let { startDate, endDate } = req.query;
 
-    // Validate the dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return sendResponseJson(
+      if (Array.isArray(startDate)) startDate = startDate[0];
+      if (Array.isArray(endDate)) endDate = endDate[0];
+
+      if (typeof startDate !== "string" || typeof endDate !== "string") {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid date format",
+          false
+        );
+        return;
+      }
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid date provided",
+          false
+        );
+        return;
+      }
+
+      const orders = await this.memberhsipUsecase.execute(start, end);
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Invalid date provided",
+        HttpStatus.OK,
+        "Reports fetched successfully",
+        true,
+        orders
+      );
+    } catch (err: any) {
+      console.log(err);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
         false
       );
     }
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new ReportsUseCase(orderRepo);
-    const orders = await orderUsecase.execute(start, end);
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Reports fetched successfully",
-      true,
-      orders
-    );
-  } catch (err: any) {
-    console.log(err);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
   }
-};
-export const getReportsMembersOrders = async (req: Request, res: Response) => {
-  try {
-    let { startDate, endDate } = req.query;
+  public async getRevenueData(req: Request, res: Response): Promise<void> {
+    try {
+      const { filter } = req.query;
 
-    // If startDate or endDate is an array, pick the first element
-    if (Array.isArray(startDate)) startDate = startDate[0];
-    if (Array.isArray(endDate)) endDate = endDate[0];
+      if (!filter) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Filter is required",
+          false
+        );
+        return;
+      }
 
-    if (typeof startDate !== "string" || typeof endDate !== "string") {
-      return sendResponseJson(
+      const revenue = await this.revenueUsecase.execute(filter);
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Invalid date format",
+        HttpStatus.OK,
+        "Revenue fetched successfully",
+        true,
+        revenue
+      );
+    } catch (err) {
+      console.log(err);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
         false
       );
     }
-
-    // Validate the dates
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return sendResponseJson(
+  }
+  public async getCourseEnrollments(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const enrollments = await this.enrollUsecase.execute();
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Invalid date provided",
+        HttpStatus.OK,
+        "Reports fetched successfully",
+        true,
+        enrollments
+      );
+    } catch (error) {
+      console.error("Error fetching course enrollments:", error);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
         false
       );
     }
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new membershipReportUsecase(orderRepo);
-    const orders = await orderUsecase.execute(start, end);
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Reports fetched successfully",
-      true,
-      orders
-    );
-  } catch (err: any) {
-    console.log(err);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
   }
-};
 
-export const getRevenueData = async (req: Request, res: Response) => {
-  try {
-    const { filter } = req.query;
-
-    if (!filter) {
-      return sendResponseJson(
+  public async getToptutors(req: Request, res: Response): Promise<void> {
+    try {
+      const tutors = await this.toptutorUsecase.execute();
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Filter is required",
+        HttpStatus.OK,
+        "Reports fetched successfully",
+        true,
+        tutors
+      );
+    } catch (error: any) {
+      console.error("Error fetching top tutors:", error);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
         false
       );
     }
+  }
 
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new RevenueUseCase(orderRepo);
-    const revenue = await orderUsecase.execute(filter);
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Revenue fetched successfully",
-      true,
-      revenue
-    );
-  } catch (err) {
-    console.log(err);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
+  public async adminDashboards(req: Request, res: Response): Promise<void> {
+    try {
+      const orders = await this.dashboardUsecase.execute();
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Reports fetched successfully",
+        true,
+        orders
+      );
+    } catch (err) {
+      console.log(err);
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "An error occurred",
+        false
+      );
+    }
   }
-};
-
-export const getCourseEnrollments = async (req: Request, res: Response) => {
-  try {
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new EnrollCourseUseCase(orderRepo);
-    const enrollments = await orderUsecase.execute();
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Reports fetched successfully",
-      true,
-      enrollments
-    );
-  } catch (error) {
-    console.error("Error fetching course enrollments:", error);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
-  }
-};
-
-export const getToptutors = async (req: Request, res: Response) => {
-  try {
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new topTutorsUsecase(orderRepo);
-    const tutors = await orderUsecase.execute();
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Reports fetched successfully",
-      true,
-      tutors
-    );
-  } catch (error: any) {
-    console.error("Error fetching top tutors:", error);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
-  }
-};
-export const getReportsMembershipb = async (req: Request, res: Response) => {};
-export const getOverallReports = async (req: Request, res: Response) => {};
-export const adminDashboards = async (req: Request, res: Response) => {
-  try {
-    const orderRepo = new ReportsRepository();
-    const orderUsecase = new DashboardUseCase(orderRepo);
-    const orders = await orderUsecase.execute();
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Reports fetched successfully",
-      true,
-      orders
-    );
-  } catch (err) {
-    console.log(err);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "An error occurred",
-      false
-    );
-  }
-};
-export const tutorDashboards = async (req: Request, res: Response) => {};
-export const topCourses = async (req: Request, res: Response) => {};
-export const topTutors = async (req: Request, res: Response) => {};
+}

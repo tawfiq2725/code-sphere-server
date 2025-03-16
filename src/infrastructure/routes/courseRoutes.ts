@@ -1,76 +1,108 @@
 import express from "express";
-// import  } from "../../presentation/middleware/auth";
-import {
-  CourseCreate,
-  GetallCourses,
-  EditCourse,
-  deleteCourse,
-  GetallCourse,
-  GetcourseByGenerateId,
-  toggleVisiblity,
-} from "../../presentation/controllers/courseCtrl";
 import { upload } from "../../config/multerConfig";
-import {
-  addChapter,
-  getChapter,
-  updateChapter,
-} from "../../presentation/controllers/chapterCtrl";
-import {
-  addCategory,
-  getAllCategory,
-  updateCategory,
-  toggleVisiblityCategory,
-  getCategory,
-  getAllCategoryCheck,
-} from "../../presentation/controllers/categoryCtrl";
-import {
-  createCoupon,
-  deleteCoupon,
-  getAllCoupons,
-  toggleCoupon,
-  updateCoupon,
-} from "../../presentation/controllers/couponCtrl";
 import { updateCourseProgress } from "../../presentation/controllers/courseCtrlProgres";
 import { verifyToken } from "../../presentation/middleware/auth";
+import { categoryCtrlDI } from "../../presentation/container/category";
+import { courseCtrlDI } from "../../presentation/container/course";
+import { couponCtrlDI } from "../../presentation/container/coupon";
+import { chapterCtrlDI } from "../../presentation/container/chapter";
 const router = express.Router();
 
-router.get("/get-courses/:id", GetallCourses);
-router.get("/get-course-data", GetallCourse);
-router.get("/get-category/:id", getCategory);
-router.get("/get-category-all", getAllCategory);
+router.get("/get-courses/:id", courseCtrlDI.GetallCourses.bind(courseCtrlDI));
+router.get("/get-course-data", courseCtrlDI.GetallCourse.bind(courseCtrlDI));
+router.get(
+  "/get-category/:id",
+  categoryCtrlDI.getCategory.bind(categoryCtrlDI)
+);
+router.get(
+  "/get-category-all",
+  categoryCtrlDI.getAllCategory.bind(categoryCtrlDI)
+);
+router.get(
+  "/get-chapter-front/:courseId",
+  chapterCtrlDI.getChapter.bind(chapterCtrlDI)
+);
+
 router.use(verifyToken(["admin", "student", "tutor"]));
 
-router.post("/add-course", upload.single("thumbnail"), CourseCreate);
-router.get("/get-course/:courseId", GetcourseByGenerateId);
-router.patch("/edit-course/:courseId", upload.single("thumbnail"), EditCourse);
-router.delete("/delete-course/:courseId", deleteCourse);
-router.patch("/toggle-visibility/:courseId", toggleVisiblity);
+router.post(
+  "/add-course",
+  upload.single("thumbnail"),
+  courseCtrlDI.CourseCreate.bind(courseCtrlDI)
+);
+router.get(
+  "/get-course/:courseId",
+  courseCtrlDI.GetcourseByGenerateId.bind(courseCtrlDI)
+);
+router.patch(
+  "/edit-course/:courseId",
+  upload.single("thumbnail"),
+  courseCtrlDI.EditCourse.bind(courseCtrlDI)
+);
+router.delete(
+  "/delete-course/:courseId",
+  courseCtrlDI.delete.bind(courseCtrlDI)
+);
+router.patch(
+  "/toggle-visibility/:courseId",
+  courseCtrlDI.toggleVisiblity.bind(courseCtrlDI)
+);
 
 // Chapters
-router.post("/add-chapter", upload.single("video"), addChapter);
-router.get("/get-chapters/:courseId", getChapter);
+router.post(
+  "/add-chapter",
+  upload.single("video"),
+  chapterCtrlDI.addChapter.bind(chapterCtrlDI)
+);
+router.get(
+  "/get-chapters/:courseId",
+  chapterCtrlDI.getChapter.bind(chapterCtrlDI)
+);
 router.patch(
   "/update-chapter/:chapterId",
   upload.single("video"),
-  updateChapter
+  chapterCtrlDI.updateChapter.bind(chapterCtrlDI)
 );
 
 // coupons
-router.get("/get-coupons", getAllCoupons);
-router.post("/create-coupon", createCoupon);
-router.patch("/update-coupon/:id", updateCoupon);
-router.patch("/coupon/toggle/:id", toggleCoupon);
-router.delete("/coupon/delete/:id", deleteCoupon);
+router.get("/get-coupons", couponCtrlDI.getAllCoupons.bind(couponCtrlDI));
+router.post("/create-coupon", couponCtrlDI.createCoupon.bind(couponCtrlDI));
+router.patch(
+  "/update-coupon/:id",
+  couponCtrlDI.updateCoupon.bind(couponCtrlDI)
+);
+router.patch(
+  "/coupon/toggle/:id",
+  couponCtrlDI.toggleCoupon.bind(couponCtrlDI)
+);
+router.delete(
+  "/coupon/delete/:id",
+  couponCtrlDI.deleteCoupon.bind(couponCtrlDI)
+);
 
-// Not auth
-router.get("/get-chapter-front/:courseId", getChapter);
+router.get(
+  "/get-chapter-front/:courseId",
+  chapterCtrlDI.getChapter.bind(chapterCtrlDI)
+);
 
 // Categories
-router.post("/add-category", addCategory);
-router.get("/get-categories", getAllCategory);
-router.patch("/update-category/:id", updateCategory);
-router.patch("/chapter/toggle-visibility/:id", toggleVisiblityCategory);
+router.post("/add-category", categoryCtrlDI.addCategory.bind(categoryCtrlDI));
+router.get(
+  "/get-categories",
+  categoryCtrlDI.getAllCategory.bind(categoryCtrlDI)
+);
+router.patch(
+  "/update-category/:id",
+  categoryCtrlDI.updateCategory.bind(categoryCtrlDI)
+);
+router.patch(
+  "/chapter/toggle-visibility/:id",
+  categoryCtrlDI.toggleVisiblityCategory.bind(categoryCtrlDI)
+);
 router.patch(`/update-progress`, updateCourseProgress);
-router.get("/get-category-all/:id", getAllCategoryCheck);
+router.get(
+  "/get-category-all/:id",
+  categoryCtrlDI.getAllCategoryCheck.bind(categoryCtrlDI)
+);
 
 export default router;

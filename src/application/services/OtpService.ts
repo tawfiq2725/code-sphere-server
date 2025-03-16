@@ -35,7 +35,6 @@ export const sendOtpEmail = async (
   };
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}`);
   } catch (error) {
     console.error("Error sending OTP email", error);
     throw new Error("Unable to send OTP email");

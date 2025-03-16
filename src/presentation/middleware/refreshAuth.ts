@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import HttpStatus from "../../utils/statusCodes";
 import sendResponseJson from "../../utils/message";
 import {
@@ -20,7 +19,6 @@ const refresh = (req: Request, res: Response): any => {
 
   try {
     const decoded = verifyRefreshToken(refreshToken) as TokenPayload;
-    console.log("✅ Decoded Refresh Token:", decoded);
     const accessToken = generateAccessToken({
       id: decoded.id,
       email: decoded.email,

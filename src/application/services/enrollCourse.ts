@@ -24,7 +24,6 @@ export const enrollUserInCourse = async (
       },
       { new: true }
     );
-    console.log("User enrolled in course successfully", updatedUser);
   } catch (error) {
     console.error("Error enrolling user in course:", error);
     throw error;
@@ -37,37 +36,41 @@ export const enrollMembership = async (
   categoryId: string | string[]
 ): Promise<void> => {
   try {
-    // Retrieve the membership plan
     const membership = await Membership.findById(membershipId);
     if (!membership) {
       throw new Error("Membership plan not found");
     }
 
-    // Ensure we work with an array of category IDs
     const categoryIds = Array.isArray(categoryId) ? categoryId : [categoryId];
-
-    // Find all courses in the given categories using the $in operator
     const courses = await Course.find({ categoryName: { $in: categoryIds } });
-
-    // Build course progress array for all courses in these categories
-    const membershipCourses = [];
-    for (const course of courses) {
-      const courseId = course.courseId;
-      const countChapters = await Chapter.countDocuments({ courseId });
-      membershipCourses.push({
-        courseId,
-        progress: 0,
-        completedChapters: [],
-        totalChapters: countChapters,
-      });
-    }
 
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Merge the new category IDs with any existing ones (avoid duplicates)
+    // Get existing course IDs that the user is already enrolled in
+    const existingCourseIds = user.courseProgress
+      ? user.courseProgress.map((course) => course.courseId)
+      : [];
+
+    // Only add courses that the user isn't already enrolled in
+    const membershipCourses = [];
+    for (const course of courses) {
+      const courseId = course.courseId;
+      // Check if user is already enrolled in this course
+      if (!existingCourseIds.includes(courseId)) {
+        const countChapters = await Chapter.countDocuments({ courseId });
+        membershipCourses.push({
+          courseId,
+          progress: 0,
+          completedChapters: [],
+          totalChapters: countChapters,
+        });
+      }
+    }
+
+    // Update categories
     let updatedCategories: string[] = [];
     const newCategories = categoryIds;
     if (user.membership && user.membership.categoryId) {
@@ -81,66 +84,63 @@ export const enrollMembership = async (
       updatedCategories = newCategories;
     }
 
-    // Update the user membership and add new course progress entries
-    await User.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          membership: {
-            categoryId: updatedCategories,
-            plan: membership.membershipPlan,
-          },
-        },
-        $addToSet: {
-          courseProgress: { $each: membershipCourses },
+    // Only update if there are new courses to add
+    const updateOperation: any = {
+      $set: {
+        membership: {
+          categoryId: updatedCategories,
+          plan: membership.membershipPlan,
         },
       },
-      { new: true }
-    );
+    };
 
-    console.log("User membership enrollment successful");
+    // Only add the $addToSet operation if there are new courses
+    if (membershipCourses.length > 0) {
+      updateOperation.$addToSet = {
+        courseProgress: { $each: membershipCourses },
+      };
+    }
+
+    await User.findByIdAndUpdate(userId, updateOperation, { new: true });
   } catch (error) {
     console.error("Error enrolling user in membership:", error);
     throw error;
   }
 };
-
-/**
- * Updates users with a new course.
- * - Only users on a "Standard" or "Premium" plan will be updated.
- * - The new course is added only if its category (newCourse.categoryName)
- *   is already part of the user's membership.categoryId.
- * - Users on the "Basic" plan do not get future courses automatically.
- */
 export const updateUsersWithNewCourse = async (
   newCourse: any
 ): Promise<void> => {
   try {
-    // Count the chapters in the new course
     const countChapters = await Chapter.countDocuments({
       courseId: newCourse.courseId,
     });
 
-    // Update only users with Standard or Premium memberships
-    // whose membership category list includes the new course's category.
-    await User.updateMany(
-      {
-        "membership.plan": { $in: ["Standard", "Premium"] },
-        "membership.categoryId": newCourse.categoryName,
-      },
-      {
-        $addToSet: {
-          courseProgress: {
-            courseId: newCourse.courseId,
-            progress: 0,
-            completedChapters: [],
-            totalChapters: countChapters,
-          },
-        },
-      }
-    );
+    // Find all users who should get this course based on membership
+    const usersToUpdate = await User.find({
+      "membership.plan": { $in: ["Standard", "Premium"] },
+      "membership.categoryId": newCourse.categoryName,
+      // Ensure user doesn't already have this course
+      "courseProgress.courseId": { $ne: newCourse.courseId },
+    });
 
-    console.log("Users with matching membership updated with the new course");
+    // Update each eligible user
+    if (usersToUpdate.length > 0) {
+      await User.updateMany(
+        {
+          _id: { $in: usersToUpdate.map((user) => user._id) },
+        },
+        {
+          $addToSet: {
+            courseProgress: {
+              courseId: newCourse.courseId,
+              progress: 0,
+              completedChapters: [],
+              totalChapters: countChapters,
+            },
+          },
+        }
+      );
+    }
   } catch (error) {
     console.error("Error updating users with new course:", error);
     throw error;

@@ -2,7 +2,7 @@ import { Membership } from "../entities/Membership";
 
 export interface IMembershipRepository {
   createMembership(membership: Membership): Promise<Membership>;
-  updateMembership(membership: Membership): Promise<Membership | null>;
+  updateMembership(membership: Partial<Membership>): Promise<Membership | null>;
   toggleMembershipStatus(membershipId: string): Promise<Membership>;
   findMembershipById(membershipId: string): Promise<Membership | null>;
   findMembershipByUserId(userId: string): Promise<Membership | null>;

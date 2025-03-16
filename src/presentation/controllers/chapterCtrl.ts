@@ -4,159 +4,142 @@ import {
   EditChapter,
   GetChapter,
 } from "../../application/usecases/Chapter";
-import { ChapterRepository } from "../../infrastructure/repositories/ChapterRepository";
 import sendResponseJson from "../../utils/message";
 import HttpStatus from "../../utils/statusCodes";
 import { Request, Response } from "express";
-
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
 }
-
 import User from "../../infrastructure/database/userSchema"; // Import User model
 import { getUrl } from "../../utils/getUrl";
 
-export const addChapter = async (
-  req: MulterRequest,
-  res: Response
-): Promise<any> => {
-  try {
-    console.log("entering the add chapter controller");
-    const { courseId, chapterName, chapterDescription } = req.body;
-    console.log("courseId", courseId);
-    console.log("chapterName", chapterName);
-    console.log("chapterDescription", chapterDescription);
-    const video = req.file;
-    if (!courseId || !chapterName || !chapterDescription || !video) {
-      return sendResponseJson(
-        res,
-        HttpStatus.BAD_REQUEST,
-        "All fields are required",
-        false
+export class ChapterCtrl {
+  constructor(
+    private create: CreateChapter,
+    private edit: EditChapter,
+    private getC: GetChapter,
+    private file: FileUploadService
+  ) {}
+
+  public async addChapter(req: MulterRequest, res: Response): Promise<void> {
+    try {
+      const { courseId, chapterName, chapterDescription } = req.body;
+      const video = req.file;
+      if (!courseId || !chapterName || !chapterDescription || !video) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "All fields are required",
+          false
+        );
+        return;
+      }
+
+      const videoUrl = await this.file.uploadCourseVideo(courseId, video);
+
+      if (!videoUrl) {
+        sendResponseJson(
+          res,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "Failed to upload video",
+          false
+        );
+        return;
+      }
+
+      const chapterData = {
+        courseId,
+        chapterName,
+        chapterDescription,
+        video: videoUrl,
+        status: true,
+      };
+      await this.create.execute(chapterData);
+
+      await User.updateMany(
+        { "courseProgress.courseId": courseId },
+        {
+          $inc: { "courseProgress.$.totalChapters": 1 },
+        }
       );
-    }
 
-    console.log("start video");
-    const videoUrl = await new FileUploadService().uploadCourseVideo(
-      courseId,
-      video
-    );
-
-    if (!videoUrl) {
-      return sendResponseJson(
+      sendResponseJson(
+        res,
+        HttpStatus.CREATED,
+        "Chapter added successfully and course progress updated",
+        true
+      );
+    } catch (error) {
+      console.error("Error in adding chapter:", error);
+      sendResponseJson(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        "Failed to upload video",
+        "Failed to add chapter",
         false
       );
     }
+  }
 
-    console.log("video uploaded");
-    const chapterData = {
-      courseId,
-      chapterName,
-      chapterDescription,
-      video: videoUrl,
-      status: true,
-    };
+  public async getChapter(req: Request, res: Response): Promise<void> {
+    try {
+      const courseId = req.params.courseId;
 
-    const repositories = new ChapterRepository();
-    const chapter = new CreateChapter(repositories);
-    const newChapter = await chapter.execute(chapterData);
-
-    console.log("chapter added successfully");
-
-    await User.updateMany(
-      { "courseProgress.courseId": courseId },
-      {
-        $inc: { "courseProgress.$.totalChapters": 1 },
+      if (!courseId) {
+        sendResponseJson(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Course id is required",
+          false
+        );
+        return;
       }
-    );
 
-    console.log("User courseProgress updated");
-
-    return sendResponseJson(
-      res,
-      HttpStatus.CREATED,
-      "Chapter added successfully and course progress updated",
-      true
-    );
-  } catch (error) {
-    console.error("Error in adding chapter:", error);
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "Failed to add chapter",
-      false
-    );
-  }
-};
-
-export const getChapter = async (req: Request, res: Response) => {
-  try {
-    const courseId = req.params.courseId;
-
-    if (!courseId) {
-      return sendResponseJson(
+      const chapters = await this.getC.execute(courseId);
+      if (!chapters) {
+        sendResponseJson(res, HttpStatus.NOT_FOUND, "No chapters found", false);
+        return;
+      }
+      for (let chapter of chapters) {
+        chapter.video = await getUrl(chapter.video);
+      }
+      sendResponseJson(res, HttpStatus.OK, "Chapters found", true, chapters);
+    } catch (error) {
+      sendResponseJson(
         res,
-        HttpStatus.BAD_REQUEST,
-        "Course id is required",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Failed to get chapters",
         false
       );
     }
-    const repositories = new ChapterRepository();
-    const chapter = new GetChapter(repositories);
-    const chapters = await chapter.execute(courseId);
-    if (!chapters) {
-      return sendResponseJson(
+  }
+  public async updateChapter(req: Request, res: Response): Promise<void> {
+    try {
+      const { chapterId } = req.params;
+
+      const updates = req.body;
+      const file = req.file;
+
+      if (file) {
+        const videoUrl = await this.file.uploadCourseVideo(chapterId, file);
+        updates.video = videoUrl;
+        updates.status = true;
+      }
+
+      await this.edit.execute(chapterId, updates);
+
+      sendResponseJson(
         res,
-        HttpStatus.NOT_FOUND,
-        "No chapters found",
+        HttpStatus.OK,
+        "Chapter updated successfully",
+        true
+      );
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
         false
       );
     }
-    for (let chapter of chapters) {
-      chapter.video = await getUrl(chapter.video);
-    }
-    return sendResponseJson(
-      res,
-      HttpStatus.OK,
-      "Chapters found",
-      true,
-      chapters
-    );
-  } catch (error) {
-    return sendResponseJson(
-      res,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-      "Failed to get chapters",
-      false
-    );
   }
-};
-export const updateChapter = async (req: Request, res: Response) => {
-  const { chapterId } = req.params;
-
-  const updates = req.body;
-  const file = req.file;
-
-  if (file) {
-    const videoUrl = await new FileUploadService().uploadCourseVideo(
-      chapterId,
-      file
-    );
-    updates.video = videoUrl;
-    updates.status = true;
-  }
-
-  const repository = new ChapterRepository();
-  const chapter = new EditChapter(repository);
-  await chapter.execute(chapterId, updates);
-
-  return sendResponseJson(
-    res,
-    HttpStatus.OK,
-    "Chapter updated successfully",
-    true
-  );
-};
+}

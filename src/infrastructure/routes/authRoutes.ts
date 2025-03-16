@@ -1,74 +1,106 @@
 import express from "express";
-import {
-  changePassword,
-  createUser,
-  generateOtpHandlerF,
-  getProfile,
-  getTutor,
-  getUserById,
-  googleAuth,
-  loginUser,
-  logout,
-  newPassword,
-  roleSelection,
-  updateUserProfileImage,
-  verifyCoupon,
-} from "../../presentation/controllers/userController";
-import {
-  generateOtpHandler,
-  verifyOtpHandler,
-} from "../../presentation/controllers/otpController";
 import { upload } from "../../config/multerConfig";
-
-import {
-  getCertificatesByStudent,
-  getCoursesByMembershipId,
-  getMembershipById,
-  getMembershipByOId,
-  getMemberships,
-} from "../../presentation/controllers/membershipCtrl";
 import refresh from "../../presentation/middleware/refreshAuth";
 import { verifyToken } from "../../presentation/middleware/auth";
-import { getOffers } from "../../presentation/controllers/offerCtrl";
+import { userControllerDI } from "../../presentation/container/user";
+import { otpControllerDI } from "../../presentation/container/otp";
+import { offerCtrlDI } from "../../presentation/container/offer";
+import { membershiCtrlDI } from "../../presentation/container/membership";
 
 const router = express.Router();
 
 // auth
-router.post("/user", createUser);
-router.post("/send-otp", generateOtpHandler);
-router.post("/resend-otp", generateOtpHandler);
-router.post("/verify-otp", verifyOtpHandler);
-router.post("/login", loginUser);
+router.post("/user", userControllerDI.createUser.bind(userControllerDI));
+router.post(
+  "/send-otp",
+  otpControllerDI.generateOtpHandler.bind(otpControllerDI)
+);
+router.post(
+  "/resend-otp",
+  otpControllerDI.resendOtpHandler.bind(otpControllerDI)
+);
+router.post(
+  "/verify-otp",
+  otpControllerDI.verifyOtpHandler.bind(otpControllerDI)
+);
+router.post("/login", userControllerDI.loginUser.bind(userControllerDI));
 router.post("/refresh", refresh);
-router.post("/forgot-password", generateOtpHandlerF);
-router.post("/verify-forgot-password", verifyOtpHandler);
-router.post("/new-password", newPassword);
-router.get("/logout", logout);
-router.post("/api/auth/google", googleAuth);
-router.post("/auth/set-role", roleSelection);
-router.get("/api/offers", getOffers);
-router.get("/api/user/find-user/:id", getUserById);
+router.post(
+  "/forgot-password",
+  userControllerDI.generateOtpHandlerF.bind(userControllerDI)
+);
+router.post(
+  "/verify-forgot-password",
+  otpControllerDI.verifyOtpHandler.bind(otpControllerDI)
+);
+router.post(
+  "/new-password",
+  userControllerDI.newPassword.bind(userControllerDI)
+);
+
+router.post(
+  "/api/auth/google",
+  userControllerDI.googleAuth.bind(userControllerDI)
+);
+router.post(
+  "/auth/set-role",
+  userControllerDI.roleSelection.bind(userControllerDI)
+);
+router.get("/api/offers", offerCtrlDI.getOffers.bind(offerCtrlDI));
+router.get(
+  "/api/user/find-user/:id",
+  userControllerDI.getUserById.bind(userControllerDI)
+);
+router.get(
+  "/logout",
+  verifyToken(["student", "tutor", "admin"]),
+  userControllerDI.logout.bind(userControllerDI)
+);
 // protected routes
 router.use(verifyToken(["student"]));
-
-router.get("/get-profile", getProfile);
-router.get("/api/user/find-user/:id", getUserById);
-router.post("/api/user/change-password", changePassword);
+router.get("/get-profile", userControllerDI.getProfile.bind(userControllerDI));
+router.get(
+  "/api/user/find-user/:id",
+  userControllerDI.getUserById.bind(userControllerDI)
+);
+router.post(
+  "/api/user/change-password",
+  userControllerDI.changePassword.bind(userControllerDI)
+);
 router.patch(
   "/api/user/update-profile-image",
   upload.single("profileImage"),
-
-  updateUserProfileImage
+  userControllerDI.updateUserProfileImage.bind(userControllerDI)
 );
 
-// user side
-router.get("/get-memberships", getMemberships);
-router.get("/get-membership/:id", getMembershipById);
-router.get("/get-membership/order/:id", getMembershipByOId);
-router.get("/get-membership/category/courses/:id", getCoursesByMembershipId);
-router.get("/get-certifcates/:id", getCertificatesByStudent);
-// coupon apply
-router.post("/api/verify-coupon", verifyCoupon);
-router.get("/student/tutor/:id", getTutor);
+router.get(
+  "/get-memberships",
+  membershiCtrlDI.getMemberships.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-membership/:id",
+  membershiCtrlDI.getMembershipById.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-membership/order/:id",
+  membershiCtrlDI.getMembershipByOId.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-membership/category/courses/:id",
+  membershiCtrlDI.getCoursesByMembershipId.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-certifcates/:id",
+  membershiCtrlDI.getCertificatesByStudent.bind(membershiCtrlDI)
+);
+// // coupon apply
+router.post(
+  "/api/verify-coupon",
+  userControllerDI.verifyCoupon.bind(userControllerDI)
+);
+router.get(
+  "/student/tutor/:id",
+  userControllerDI.getTutor.bind(userControllerDI)
+);
 
 export default router;

@@ -50,8 +50,6 @@ export class AwsConfig {
     file: Express.Multer.File
   ): Promise<string> {
     try {
-      console.log("Uploading file to S3 using @aws-sdk/lib-storage...");
-
       const uniqueName = crypto.randomBytes(16).toString("hex");
       const fileExtension = file.mimetype.split("/")[1];
       const fileName = `${folderPath}${uniqueName}.${fileExtension}`;
@@ -67,8 +65,7 @@ export class AwsConfig {
         },
       });
 
-      const result = await upload.done();
-      console.log("File successfully uploaded to S3:", result);
+      await upload.done();
 
       return fileName;
     } catch (error: any) {

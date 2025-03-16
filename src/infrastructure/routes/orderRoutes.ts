@@ -1,22 +1,23 @@
 import express from "express";
-import {
-  createMembershipOrder,
-  createOrder,
-  getAllOrders,
-  getOrderById,
-  getOrderByUserId,
-  verifyMembershipOrder,
-  verifyOrder,
-} from "../../presentation/controllers/orderCtrl";
 import { verifyToken } from "../../presentation/middleware/auth";
+import { OrderCtrlDI } from "../../presentation/container/order";
 
 const router = express.Router();
 router.use(verifyToken(["student", "admin"]));
-router.post("/create-order", createOrder);
-router.post("/verify-order", verifyOrder);
-router.post("/membership/create-order", createMembershipOrder);
-router.post("/membership/verify-order", verifyMembershipOrder);
-router.get("/get-user-orders/:userId", getOrderByUserId);
-router.get("/get-all-orders", getAllOrders);
-router.get("/get-all-orders/:id", getOrderById);
+router.post("/create-order", OrderCtrlDI.createOrder.bind(OrderCtrlDI));
+router.post("/verify-order", OrderCtrlDI.verifyOrder.bind(OrderCtrlDI));
+router.post(
+  "/membership/create-order",
+  OrderCtrlDI.createMembershipOrder.bind(OrderCtrlDI)
+);
+router.post(
+  "/membership/verify-order",
+  OrderCtrlDI.verifyMembershipOrder.bind(OrderCtrlDI)
+);
+router.get(
+  "/get-user-orders/:userId",
+  OrderCtrlDI.getOrderByUserId.bind(OrderCtrlDI)
+);
+router.get("/get-all-orders", OrderCtrlDI.getAllOrders.bind(OrderCtrlDI));
+router.get("/get-all-orders/:id", OrderCtrlDI.getOrderById.bind(OrderCtrlDI));
 export default router;

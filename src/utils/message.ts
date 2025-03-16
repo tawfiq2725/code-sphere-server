@@ -6,8 +6,8 @@ const sendResponseJson = (
   message: string,
   success: boolean,
   _data?: any
-) => {
-  res.status(status).json({
+): express.Response => {
+  return res.status(status).json({
     message,
     success,
     data: _data,

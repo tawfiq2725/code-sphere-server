@@ -17,11 +17,46 @@ export class CreateMembership {
     );
     return this.membershipRepository.createMembership(newMembership);
   }
+  public async execToggle(id: string) {
+    try {
+      const membership = await this.membershipRepository.toggleMembershipStatus(
+        id
+      );
+      return membership;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async execGetAll(): Promise<Membership[]> {
+    try {
+      const membership = await this.membershipRepository.getAllMemberships();
+      return membership;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
+  public async execById(id: string): Promise<Membership | null> {
+    try {
+      const membership = await this.membershipRepository.findMembershipById(id);
+      return membership;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
 }
 
 export class updateMembershipUsecase {
   constructor(private membershipRepository: IMembershipRepository) {}
-  public async execute(updatedData: any): Promise<any> {
+  public async execute(
+    id: string,
+    updatedData: Partial<Membership>
+  ): Promise<any> {
+    const existingMembership =
+      await this.membershipRepository.findMembershipById(id);
+    if (!existingMembership) {
+      throw new Error("Not available");
+    }
     return await this.membershipRepository.updateMembership(updatedData);
   }
 }

@@ -5,36 +5,33 @@ export class createOrderuseCase {
   constructor(private orderRepository: OrderInterface) {}
 
   public async execute(orderData: Omit<Order, "id">): Promise<Order> {
-    console.log("starting ---------------9");
-    const { userId, courseId } = orderData;
-    console.log("starting ---------------10");
-    console.log(userId);
+    try {
+      const { courseId } = orderData;
 
-    console.log("starting ---------------11");
-    let checkCourse = await this.orderRepository.checkCourse(courseId);
-    console.log(checkCourse);
-    if (!checkCourse) {
-      throw new Error("The course is currently unlisted check back later");
+      let checkCourse = await this.orderRepository.checkCourse(courseId);
+      if (!checkCourse) {
+        throw new Error("The course is currently unlisted check back later");
+      }
+      const newOrder = new Order(
+        orderData.orderId,
+        orderData.userId,
+        orderData.courseId,
+        orderData.totalAmount,
+        orderData.orderStatus,
+        orderData.paymentStatus,
+        orderData.isApplied,
+        orderData.razorpayOrderId,
+        orderData.razorpayPaymentId,
+        orderData.razorpaySignature,
+        orderData.couponCode,
+        orderData.couponDiscount
+      );
+      await this.orderRepository.create(newOrder);
+
+      return newOrder;
+    } catch (err: any) {
+      throw new Error(err.message);
     }
-    const newOrder = new Order(
-      orderData.orderId,
-      orderData.userId,
-      orderData.courseId,
-      orderData.totalAmount,
-      orderData.orderStatus,
-      orderData.paymentStatus,
-      orderData.isApplied,
-      orderData.razorpayOrderId,
-      orderData.razorpayPaymentId,
-      orderData.razorpaySignature,
-      orderData.couponCode,
-      orderData.couponDiscount
-    );
-    console.log("starting ---------------12");
-    await this.orderRepository.create(newOrder);
-    console.log("starting ---------------13");
-
-    return newOrder;
   }
 }
 
@@ -42,25 +39,27 @@ export class verifyOrderuseCase {
   constructor(private orderRepository: OrderInterface) {}
 
   public async execute(orderData: Partial<Order>): Promise<any> {
-    console.log("starting ---------------9");
-    const { orderId } = orderData;
-    console.log("starting ---------------10");
-    if (!orderId) {
-      throw new Error("Invalid Request");
-    }
-    console.log("starting ---------------11");
-    const existingOrder = await this.orderRepository.findOrderById(orderId);
-    if (!existingOrder) {
-      throw new Error("Order not found");
-    }
-    console.log("starting ---------------12");
+    try {
+      const { orderId } = orderData;
 
-    const updatedOrder = await this.orderRepository.updateOrder(
-      orderId,
-      orderData
-    );
-    console.log("starting ---------------13");
-    return updatedOrder;
+      if (!orderId) {
+        throw new Error("Invalid Request");
+      }
+
+      const existingOrder = await this.orderRepository.findOrderById(orderId);
+      if (!existingOrder) {
+        throw new Error("Order not found");
+      }
+
+      const updatedOrder = await this.orderRepository.updateOrder(
+        orderId,
+        orderData
+      );
+
+      return updatedOrder;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }
 
@@ -70,11 +69,30 @@ export class getOrderByIduseCase {
   public async execute(
     userId: string
   ): Promise<{ orders: any[]; membershipOrders: any[] } | null> {
-    console.log("starting ---------------9");
-    console.log(userId);
-    console.log("starting ---------------10");
-    const existingOrder = await this.orderRepository.getOrderByUserId(userId);
-    console.log("starting ---------------11");
-    return existingOrder;
+    try {
+      const existingOrder = await this.orderRepository.getOrderByUserId(userId);
+
+      return existingOrder;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
+  public async execGetall(): Promise<Order[]> {
+    try {
+      const orders = await this.orderRepository.getAllOrders();
+      return orders;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
+  public async execGetByOrderId(id: string): Promise<Order | null> {
+    try {
+      const order = await this.orderRepository.findOrderById(id);
+      return order;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }

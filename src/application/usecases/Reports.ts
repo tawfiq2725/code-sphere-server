@@ -139,7 +139,6 @@ export class topTutorsUsecase {
   constructor(private reportRepository: ReportInterface) {}
   public async execute(): Promise<any> {
     const tutors = await this.reportRepository.topTutors();
-    console.log(tutors);
     return tutors;
   }
 }

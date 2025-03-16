@@ -7,7 +7,7 @@ export interface UserInterface {
   create(user: Person): Promise<Person>;
   findByEmail(email: string): Promise<Person | null>;
   findById(id: string): Promise<Person | null>;
-  update(id: string, user: Person): Promise<Person | null>;
+  update(id: string, user: Partial<Person>): Promise<Person | null>;
   getAllUsers(options: PaginationOptions): Promise<UserData>;
   getAllTutor(options: PaginationOptions): Promise<UserData>;
   getAllTutorApplication(options: PaginationOptions): Promise<UserData>;
@@ -22,4 +22,6 @@ export interface UserInterface {
   getTutors(id: string): Promise<Person[]>;
   getUsers(tutorId: string): Promise<Person[]>;
   myCourses(tutorId: string): Promise<Course[] | null>;
+  getEnrollStudents(id: string): Promise<Person[] | null>;
+  getCertificatesByStudent(id: string): Promise<any>;
 }

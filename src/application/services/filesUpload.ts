@@ -40,9 +40,7 @@ export class FileUploadService {
     courseId: string,
     thumbnail: Express.Multer.File
   ): Promise<string | undefined> {
-    console.log("Uploading course thumbnail");
     const thumbnailKey = `course/thumbnail/${courseId}/`;
-    console.log("Thumbnail key:", thumbnailKey);
     const uploadedKey = await this.awsConfig.uploadFileToS3(
       thumbnailKey,
       thumbnail
@@ -73,8 +71,6 @@ export class FileUploadService {
     userId: string,
     certificate: Express.Multer.File
   ): Promise<string | undefined> {
-    console.log("Uploading course certificate");
-    console.log("User ID:", userId, "Certificate:", certificate);
     const certKey = `student/certificate/${userId}/`;
     const uploadedKey = await this.awsConfig.uploadFileToS3(
       certKey,

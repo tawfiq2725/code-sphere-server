@@ -1,64 +1,79 @@
 import express from "express";
-import {
-  approveTutor,
-  BlockUser,
-  disapproveTutor,
-  GetallCoursesAdmin,
-  getAllTutorList,
-  getAllTutorListApplication,
-  getAllUsersList,
-  UnblockUser,
-  toggleCourse,
-  approveOrRejectCourse,
-} from "../../presentation/controllers/getAllusers";
-// import { authenticate } from "../../presentation/middleware/auth";
-import { getTutorCertificates } from "../../presentation/controllers/tutorCtrl";
-import {
-  createMembership,
-  getAllMembershipOrders,
-  getAllMemberships,
-  getMembershipOrderById,
-  toggleMembershipStatus,
-  updateMembership,
-} from "../../presentation/controllers/membershipCtrl";
 import { verifyToken } from "../../presentation/middleware/auth";
-import {
-  createOffer,
-  getOffer,
-  getOffers,
-  toggleOffer,
-  updateOffer,
-} from "../../presentation/controllers/offerCtrl";
-import { getUserById } from "../../presentation/controllers/userController";
-import { getAllCategory } from "../../presentation/controllers/categoryCtrl";
+
+import { userControllerDI } from "../../presentation/container/user";
+import { offerCtrlDI } from "../../presentation/container/offer";
+import { tutorControllerDI } from "../../presentation/container/tutor";
+import { adminCtrlDI } from "../../presentation/container/admin";
+import { categoryCtrlDI } from "../../presentation/container/category";
+import { membershiCtrlDI } from "../../presentation/container/membership";
 
 const router = express.Router();
 
 router.use(verifyToken(["admin"]));
 
-router.get("/get-users", getAllUsersList);
-router.patch("/block-user/:id", BlockUser);
-router.patch("/unblock-user/:id", UnblockUser);
-router.get("/get-tutors", getAllTutorList);
-router.get("/get-tutors/applications", getAllTutorListApplication);
-router.patch("/approve-tutor/:tutorId", approveTutor);
-router.patch("/disapprove-tutor/:tutorId", disapproveTutor);
-router.get("/tutor/certificates/:id", getTutorCertificates);
-router.get("/get-courses", GetallCoursesAdmin);
-router.patch("/toggle-course/:id", toggleCourse);
-router.patch("/api/approve-or-reject-course/:courseId", approveOrRejectCourse);
-router.get("/api/user/find-user/:id", getUserById);
+router.get("/get-users", adminCtrlDI.getAllUsersList.bind(adminCtrlDI));
+router.patch("/block-user/:id", adminCtrlDI.BlockUser.bind(adminCtrlDI));
+router.patch("/unblock-user/:id", adminCtrlDI.UnblockUser.bind(adminCtrlDI));
+router.get("/get-tutors", adminCtrlDI.getAllTutorList.bind(adminCtrlDI));
+router.get(
+  "/get-tutors/applications",
+  adminCtrlDI.getAllTutorListApplication.bind(adminCtrlDI)
+);
+router.patch(
+  "/approve-tutor/:tutorId",
+  adminCtrlDI.approveTutor.bind(adminCtrlDI)
+);
+router.patch(
+  "/disapprove-tutor/:tutorId",
+  adminCtrlDI.disapproveTutor.bind(adminCtrlDI)
+);
+router.get(
+  "/tutor/certificates/:id",
+  tutorControllerDI.getTutorCertificates.bind(tutorControllerDI)
+);
+router.get("/get-courses", adminCtrlDI.GetallCoursesAdmin.bind(adminCtrlDI));
+router.patch("/toggle-course/:id", adminCtrlDI.toggleCourse.bind(adminCtrlDI));
+router.patch(
+  "/api/approve-or-reject-course/:courseId",
+  adminCtrlDI.approveOrRejectCourse.bind(adminCtrlDI)
+);
+router.get(
+  "/api/user/find-user/:id",
+  userControllerDI.getUserById.bind(userControllerDI)
+);
 
-router.post("/add-membership", createMembership);
-router.patch("/edit-membership/:id", updateMembership);
-router.patch("/toggle-membership/:id", toggleMembershipStatus);
-router.get("/get-memberships", getAllMemberships);
-router.get("/get-memberships/orders", getAllMembershipOrders);
-router.get("/get-memberships/orders/:id", getMembershipOrderById);
-router.get("/get-categories", getAllCategory);
-router.post("/create-offer", createOffer);
-router.put("/update-offer/:id", updateOffer);
-router.get("/get-offer/:id", getOffer);
-router.get("/get-offers", getOffers);
-router.patch("/toggle-offer/:id", toggleOffer);
+router.post(
+  "/add-membership",
+  membershiCtrlDI.createMembership.bind(membershiCtrlDI)
+);
+router.patch(
+  "/edit-membership/:id",
+  membershiCtrlDI.updateMembership.bind(membershiCtrlDI)
+);
+router.patch(
+  "/toggle-membership/:id",
+  membershiCtrlDI.toggleMembershipStatus.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-memberships",
+  membershiCtrlDI.getAllMemberships.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-memberships/orders",
+  membershiCtrlDI.getAllMembershipOrders.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-memberships/orders/:id",
+  membershiCtrlDI.getMembershipOrderById.bind(membershiCtrlDI)
+);
+router.get(
+  "/get-categories",
+  categoryCtrlDI.getAllCategory.bind(categoryCtrlDI)
+);
+router.post("/create-offer", offerCtrlDI.createOffer.bind(offerCtrlDI));
+router.put("/update-offer/:id", offerCtrlDI.updateOffer.bind(offerCtrlDI));
+router.get("/get-offer/:id", offerCtrlDI.getOffer.bind(offerCtrlDI));
+router.get("/get-offers", offerCtrlDI.getOffers.bind(offerCtrlDI));
+router.patch("/toggle-offer/:id", offerCtrlDI.toggleOffer.bind(offerCtrlDI));
 export default router;

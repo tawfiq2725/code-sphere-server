@@ -1,28 +1,118 @@
 import { CourseInterface } from "../../domain/interface/Course";
 import { Course } from "../../domain/entities/Course";
+import { getUrl } from "../../utils/getUrl";
+import { updateUsersWithNewCourse } from "../services/enrollCourse";
+import { FileUploadService } from "../services/filesUpload";
 
 export class CreateCourse {
-  constructor(private courseRepository: CourseInterface) {}
-  public async execute(courseData: Omit<Course, "id">): Promise<Course> {
-    console.log("Creating course.......1");
+  constructor(
+    private courseRepository: CourseInterface,
+    private fileUpload: FileUploadService
+  ) {}
+  public async execute(course: Partial<Course>): Promise<Course> {
+    try {
+      if (!course.courseName) {
+        throw new Error("Course name is needed");
+      }
+      const existingCourse = await this.courseRepository.findCourseByName(
+        course.courseName
+      );
+      if (existingCourse) {
+        throw new Error("Course Name Already Exists");
+      }
+      const newCourse = new Course(
+        course?.courseId ?? "",
+        course.courseName,
+        course.courseDescription ?? "",
+        course.info ?? "",
+        course.price ?? 5000,
+        course.prerequisites ?? "",
+        course.thumbnail ?? "",
+        course.isVisible ?? false,
+        course.tutorId ?? "",
+        course.courseStatus ?? "pending",
+        course.categoryName ?? ""
+      );
+      return this.courseRepository.create(newCourse);
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
 
-    console.log("Creating course.......3");
+  public async execGetAll(id: string): Promise<Course[]> {
+    try {
+      const res = await this.courseRepository.getAllCoursesId(id);
+      for (let course of res) {
+        course.thumbnail = await getUrl(course.thumbnail);
+      }
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async execGetC(): Promise<Course[]> {
+    try {
+      const res = await this.courseRepository.getAllCourses();
+      for (let course of res) {
+        course.thumbnail = await getUrl(course.thumbnail);
+      }
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async execGetById(id: string): Promise<Course> {
+    try {
+      const res = await this.courseRepository.findCourseByGenerateId(id);
+      if (!res) {
+        throw new Error("Course not found");
+      }
+      if (res.thumbnail) res.thumbnail = await getUrl(res.thumbnail);
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
 
-    const newCourse = new Course(
-      courseData.courseId,
-      courseData.courseName,
-      courseData.courseDescription,
-      courseData.info,
-      courseData.price,
-      courseData.prerequisites,
-      courseData.thumbnail,
-      courseData.isVisible,
-      courseData.tutorId,
-      courseData.courseStatus,
-      courseData.categoryName
-    );
-    console.log("Creating course.......4");
-    return this.courseRepository.create(newCourse);
+  public async execUpdate(
+    updates: Partial<Course>,
+    file: Express.Multer.File | "",
+    courseId: string
+  ): Promise<Course> {
+    try {
+      if (file) {
+        const thumbnailUrl = await this.fileUpload.uploadCourseThumbnail(
+          courseId,
+          file
+        );
+        updates.thumbnail = thumbnailUrl;
+      }
+      const existingCourse = await this.courseRepository.findCourseByGenerateId(
+        courseId
+      );
+
+      if (!existingCourse) {
+        throw new Error("Already exist");
+      }
+
+      if (updates.price && isNaN(parseFloat(String(updates.price)))) {
+        throw new Error("Invalid price value. It must be a number.");
+      }
+
+      const updated = await this.courseRepository.updateCourse(
+        courseId,
+        updates
+      );
+      if (!updated) {
+        throw new Error("Something went wrong");
+      }
+      if (updated?.thumbnail) {
+        updated.thumbnail = await getUrl(updated.thumbnail);
+      }
+      return updated;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }
 
@@ -31,7 +121,7 @@ export class DeleteCourse {
   constructor(private courseRepository: CourseInterface) {}
   public async execute(courseId: string): Promise<void> {
     const course = await this.courseRepository.findCourseByGenerateId(courseId);
-    console.log("course", course);
+
     if (!course) {
       throw new Error("Course not found");
     }
@@ -44,11 +134,104 @@ export class ToggleCourseVisibility {
   constructor(private courseRepository: CourseInterface) {}
   public async execute(courseId: string): Promise<any> {
     const course = await this.courseRepository.findCourseById(courseId);
-    console.log("course", course);
+
     if (!course) {
       throw new Error("Course not found");
     }
     course.isVisible = !course.isVisible; // Toggle the visibility
     return this.courseRepository.updateCourse(courseId, course);
+  }
+}
+
+export class GetAllCourse {
+  constructor(private courseRepo: CourseInterface) {}
+  public async execute(): Promise<Course[]> {
+    try {
+      let courses = await this.courseRepo.getAllCoursesAdmin();
+      for (let course of courses) {
+        course.thumbnail = await getUrl(course.thumbnail);
+      }
+      return courses;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async execToggleCourse(
+    id: string,
+    isVisible: boolean
+  ): Promise<Course> {
+    try {
+      const existingCourse = await this.courseRepo.findCourseByGenerateId(id);
+      if (!existingCourse) {
+        throw new Error("course not found");
+      }
+
+      const updatedCourse = {
+        isVisible,
+      };
+
+      const course = await this.courseRepo.updateCourse(id, updatedCourse);
+      if (!course) {
+        throw new Error("Something went wrong ");
+      }
+      return course;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
+  public async execApproveOrReject(
+    courseId: string,
+    courseStatus: "pending" | "approved" | "rejected",
+    percentage: number
+  ): Promise<Course> {
+    try {
+      const existingCourse = await this.courseRepo.findCourseByGenerateId(
+        courseId
+      );
+      if (!existingCourse) {
+        throw new Error("Course Not Available");
+      }
+
+      if (courseStatus === "approved") {
+        if (percentage < 0 || percentage > 100) {
+          throw new Error("Invalid Percentage");
+        }
+        let sellingPrice = existingCourse.price / (1 - percentage / 100);
+        let wholeSellingPrice = Math.round(sellingPrice / 10) * 10;
+
+        const updatedCourse = {
+          isVisible: true,
+          courseStatus,
+          sellingPrice: wholeSellingPrice,
+        };
+
+        const course = await this.courseRepo.updateCourse(
+          courseId,
+          updatedCourse
+        );
+        if (!course) {
+          throw new Error("Course Not Available");
+        }
+        await updateUsersWithNewCourse(existingCourse);
+        return course;
+      } else if (courseStatus === "rejected") {
+        const updatedCourse = {
+          courseStatus,
+        };
+        const course = await this.courseRepo.updateCourse(
+          courseId,
+          updatedCourse
+        );
+        if (!course) {
+          throw new Error("Course Not Available");
+        }
+        return course;
+      } else {
+        throw new Error("Invalid Course status");
+      }
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 }

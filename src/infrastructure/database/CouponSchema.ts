@@ -1,7 +1,7 @@
 import { Schema, model, Types } from "mongoose";
 
 export interface IUsedBy {
-  userId: Types.ObjectId;
+  userId: string;
   count: number;
 }
 

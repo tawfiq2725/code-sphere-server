@@ -6,22 +6,20 @@ export class CourseProgress {
 
   public async execute(courseData: any): Promise<any> {
     const { userId, chapterId, courseId } = courseData;
-    console.log("starting.....1");
+
     try {
       const user = await this.userRepository.findById(userId);
-      console.log("starting.....2");
+
       if (!user) {
         throw new Error("User not found");
       }
 
       const totalChapters = await Chapter.countDocuments({ courseId });
-      console.log("starting.....3");
-      console.log("totalChapters", totalChapters);
+
       let progressEntry = user.courseProgress?.find(
         (entry) => entry.courseId === courseId
       );
-      console.log("starting.....4");
-      console.log("progressEntry", progressEntry);
+
       if (progressEntry) {
         if (progressEntry.completedChapters.includes(chapterId)) {
           return { message: "Chapter already completed" };
