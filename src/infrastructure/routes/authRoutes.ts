@@ -58,7 +58,11 @@ router.get(
   "/api/user/find-user/:id",
   userControllerDI.getUserById.bind(userControllerDI)
 );
-router.get("/logout", userControllerDI.logout.bind(userControllerDI));
+router.get(
+  "/logout",
+  verifyToken(["student", "tutor", "admin"]),
+  userControllerDI.logout.bind(userControllerDI)
+);
 router.get("/get-courses/:id", courseCtrlDI.GetallCourses.bind(courseCtrlDI));
 router.get("/get-course-data", courseCtrlDI.GetallCourse.bind(courseCtrlDI));
 router.get(
