@@ -13,6 +13,7 @@ import { chapterCtrlDI } from "../../presentation/container/chapter";
 const router = express.Router();
 
 // auth
+router.post("/refresh", refresh);
 router.post("/user", userControllerDI.createUser.bind(userControllerDI));
 router.post(
   "/send-otp",
@@ -27,7 +28,6 @@ router.post(
   otpControllerDI.verifyOtpHandler.bind(otpControllerDI)
 );
 router.post("/login", userControllerDI.loginUser.bind(userControllerDI));
-router.post("/refresh", refresh);
 router.post(
   "/forgot-password",
   userControllerDI.generateOtpHandlerF.bind(userControllerDI)
