@@ -107,6 +107,7 @@ export class MembershipCtrl {
   }
   public async getMemberships(req: Request, res: Response): Promise<void> {
     try {
+      console.log("calling");
       const memberships = await this.createMembershipUsecase.execGetAll();
       sendResponseJson(
         res,
