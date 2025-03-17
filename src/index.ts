@@ -47,10 +47,10 @@ const server = createServer(app);
 const io = initSocket(server);
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 app.use(cookieParser());
 app.use(logger("dev"));
-app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/reports", reportRoutes);
 app.use("/api/order", orderRoutes);
