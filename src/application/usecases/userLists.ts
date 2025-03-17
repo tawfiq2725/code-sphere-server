@@ -1,5 +1,6 @@
 import { Person } from "../../domain/entities/User";
 import { UserInterface } from "../../domain/interface/User";
+import { UserDocument } from "../../infrastructure/database/userSchema";
 import { getUrl } from "../../utils/getUrl";
 import { PaginationOptions } from "../../utils/queryHelper";
 import { sendEmail } from "../services/applicationStatus";
@@ -139,7 +140,7 @@ export class approveCertificateUsecase {
     }
   }
 
-  async exeEnrollstudents(id: string): Promise<Person[] | null> {
+  async exeEnrollstudents(id: string): Promise<UserDocument[] | null> {
     try {
       if (!id) {
         throw new Error("Id is important");

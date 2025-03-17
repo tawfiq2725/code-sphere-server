@@ -171,16 +171,6 @@ export class UserController {
         sameSite: "strict",
       });
 
-      // Prevent caching
-      res.setHeader(
-        "Cache-Control",
-        "no-store, no-cache, must-revalidate, proxy-revalidate"
-      );
-      res.setHeader("Pragma", "no-cache");
-      res.setHeader("Expires", "0");
-
-      console.log("Logout successful: All session data cleared.");
-
       sendResponseJson(res, HttpStatus.OK, "Logout successful", true);
     } catch (err: any) {
       sendResponseJson(

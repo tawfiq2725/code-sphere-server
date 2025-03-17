@@ -1,4 +1,5 @@
 import { UserData } from "../../application/usecases/userLists";
+import { UserDocument } from "../../infrastructure/database/userSchema";
 import { PaginationOptions } from "../../utils/queryHelper";
 import { Course } from "../entities/Course";
 import { Person } from "../entities/User";
@@ -22,6 +23,6 @@ export interface UserInterface {
   getTutors(id: string): Promise<Person[]>;
   getUsers(tutorId: string): Promise<Person[]>;
   myCourses(tutorId: string): Promise<Course[] | null>;
-  getEnrollStudents(id: string): Promise<Person[] | null>;
+  getEnrollStudents(id: string): Promise<UserDocument[] | null>;
   getCertificatesByStudent(id: string): Promise<any>;
 }
