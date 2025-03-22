@@ -13,6 +13,11 @@ interface IOrder extends Document {
   razorpaySignature?: string;
   couponCode?: string;
   couponDiscount?: string;
+  createdAt?: Date;
+}
+
+export interface IorderDes {
+  description: string;
 }
 
 const OrderSchema = new Schema<IOrder>(

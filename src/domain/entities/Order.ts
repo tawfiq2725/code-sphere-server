@@ -15,3 +15,11 @@ export class Order {
     public couponDiscount?: string
   ) {}
 }
+
+export class Review {
+  constructor(
+    public rating: number,
+    public description: string,
+    public hasReview: boolean
+  ) {}
+}

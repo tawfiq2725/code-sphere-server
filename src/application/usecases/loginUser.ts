@@ -14,6 +14,7 @@ import { getUrl } from "../../utils/getUrl";
 import { GenerateOtp } from "./generateOtp";
 import { sendOtpEmail } from "../services/OtpService";
 import { ReportInterface } from "../../domain/interface/Report";
+import { Chat } from "../../infrastructure/database/chatSchema";
 
 export class LoginUser {
   constructor(private userRepository: UserInterface) {}
@@ -329,6 +330,26 @@ export class PasswordUsecase {
       user.password = newPassword;
       await user.hashPassword();
       await this.userRepository.update(userId, user);
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+}
+
+export class RecentMessageStudents {
+  constructor(private userRepo: UserInterface) {}
+  public async execute(id: string): Promise<Chat[]> {
+    try {
+      const message = await this.userRepo.recentMessage(id);
+      return message;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async executeTutor(id: string): Promise<Chat[]> {
+    try {
+      const message = await this.userRepo.recentMessageT(id);
+      return message;
     } catch (err: any) {
       throw new Error(err.message);
     }

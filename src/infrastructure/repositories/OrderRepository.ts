@@ -1,8 +1,8 @@
-import { Order } from "../../domain/entities/Order";
+import { Order, Review } from "../../domain/entities/Order";
 import { OrderInterface } from "../../domain/interface/Order";
 import Course from "../database/courseSchema";
 import MembershipOrder from "../database/order-mSchema";
-import OrderS from "../database/orderSchema";
+import OrderS, { IorderDes } from "../database/orderSchema";
 export class OrderRepository implements OrderInterface {
   public async create(order: Order): Promise<Order> {
     try {

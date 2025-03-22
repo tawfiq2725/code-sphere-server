@@ -155,7 +155,11 @@ export class AdminCtrl {
   public async disapproveTutor(req: Request, res: Response): Promise<void> {
     try {
       const { tutorId } = req.params;
-      const user = await this.getAlltutorUsecase.execDissAprove(tutorId);
+      const { reason } = req.body;
+      const user = await this.getAlltutorUsecase.execDissAprove(
+        tutorId,
+        reason
+      );
 
       sendResponseJson(
         res,

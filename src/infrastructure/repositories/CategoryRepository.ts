@@ -14,13 +14,26 @@ export class CategoryRepository implements CategoryInterface {
   }
   public async checkDuplicateCategory(categoryName: string): Promise<boolean> {
     try {
-      const existingCategory = await CategoryS.findOne({ categoryName });
+      console.log(categoryName);
+      const existingCategory = await CategoryS.findOne({
+        categoryName: new RegExp(`^${categoryName}$`, "i"),
+      });
+
+      console.log(existingCategory);
       return !!existingCategory;
     } catch (err) {
       console.log(err);
       throw new Error("Something went wrong");
     }
   }
+  public async countCategoryByName(categoryName: string): Promise<number> {
+    try {
+      return await CategoryS.countDocuments({ categoryName });
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
   public async getAllCategory(): Promise<Category[]> {
     try {
       return await CategoryS.find();

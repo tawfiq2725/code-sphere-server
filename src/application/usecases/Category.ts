@@ -5,9 +5,11 @@ export class CategoryUsecase {
   constructor(private categoryRepo: CategoryInterface) {}
   public async execAdd(category: Category): Promise<Category> {
     try {
+      console.log(category);
       let check = await this.categoryRepo.checkDuplicateCategory(
         category.categoryName
       );
+      console.log(check);
       if (check) {
         throw new Error("Category Alreay Exists");
       }
@@ -49,8 +51,12 @@ export class CategoryUsecase {
     id: string,
     category: Partial<Category>
   ): Promise<Category> {
-    const res = await this.categoryRepo.updateCategory(id, category);
-    return res;
+    try {
+      const res = await this.categoryRepo.updateCategory(id, category);
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
   }
 
   public async execToggle(id: string): Promise<Category> {

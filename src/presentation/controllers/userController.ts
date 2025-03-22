@@ -7,6 +7,7 @@ import {
   GoogleAuth,
   LoginUser,
   PasswordUsecase,
+  RecentMessageStudents,
   setRole,
 } from "../../application/usecases/loginUser";
 import sendResponseJson from "../../utils/message";
@@ -23,7 +24,8 @@ export class UserController {
     private googleAuthUsecase: GoogleAuth,
     private setRoleUsecase: setRole,
     private couponUsecase: createCouponUsecase,
-    private tutorUsecase: getTutorUsecasae
+    private tutorUsecase: getTutorUsecasae,
+    private message: RecentMessageStudents
   ) {}
 
   public async createUser(req: Request, res: Response): Promise<void> {
@@ -362,6 +364,34 @@ export class UserController {
       sendResponseJson(res, HttpStatus.OK, "Tutors fetched", true, tutors);
     } catch (error: any) {
       sendResponseJson(res, HttpStatus.BAD_REQUEST, error.message, false);
+    }
+  }
+  public async getRecentChats(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const message = await this.message.execute(id);
+      sendResponseJson(res, HttpStatus.OK, "Recent Messages", true, message);
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
+        false
+      );
+    }
+  }
+  public async getRecentChatsTutor(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const message = await this.message.executeTutor(id);
+      sendResponseJson(res, HttpStatus.OK, "Recent Messages", true, message);
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
+        false
+      );
     }
   }
 }

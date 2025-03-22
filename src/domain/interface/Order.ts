@@ -1,4 +1,5 @@
-import { Order } from "../entities/Order";
+import { IorderDes } from "../../infrastructure/database/orderSchema";
+import { Order, Review } from "../entities/Order";
 
 export interface OrderInterface {
   create(order: Order): Promise<Order>;

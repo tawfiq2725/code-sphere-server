@@ -330,155 +330,94 @@ export class ReportsRepository implements ReportInterface {
   }
   public async getTutorDashboard(tutorId: string): Promise<any> {
     try {
+      // Fetch tutor's courses that are approved
       const courses = await Course.find({ tutorId, courseStatus: "approved" });
-      const courseIds = courses.map((course: any) => course.courseId);
       const totalCourses = courses.length;
+      const courseIds = courses.map((course) => course.courseId);
 
-      const totalOrderEnrollments = await OrderS.find({
+      // Fetch normal course orders
+      const orders = await OrderS.find({
         courseId: { $in: courseIds },
         orderStatus: "success",
-      }).countDocuments();
+      });
 
-      const ordersUniqueStudentsAgg = await OrderS.aggregate([
-        { $match: { courseId: { $in: courseIds }, orderStatus: "success" } },
-        { $group: { _id: "$userId" } },
-        { $group: { _id: null, uniqueCount: { $sum: 1 } } },
-      ]);
-      const ordersUniqueStudents =
-        ordersUniqueStudentsAgg.length > 0
-          ? ordersUniqueStudentsAgg[0].uniqueCount
-          : 0;
+      // Fetch membership orders
+      const membershipOrders = await MembershipOrder.find({
+        orderStatus: "success",
+      });
 
-      const ordersRevenueAgg = await OrderS.aggregate([
-        { $match: { courseId: { $in: courseIds }, orderStatus: "success" } },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: {
-              $sum: {
-                $convert: { input: "$totalAmount", to: "double", onError: 0 },
-              },
-            },
-          },
-        },
-      ]);
-      const ordersRevenue = ordersRevenueAgg[0]?.totalRevenue || 0;
+      // Total enrollments: sum of normal orders and membership orders
+      const totalEnrollments = orders.length + membershipOrders.length;
 
-      const orderEnrollmentTrendAgg = await OrderS.aggregate([
-        {
-          $match: { courseId: { $in: courseIds }, orderStatus: "success" },
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]);
-      const membershipOrdersAgg = await MembershipOrder.aggregate([
-        { $match: { orderStatus: "success" } },
-        {
-          $lookup: {
-            from: "memberships",
-            localField: "membershipId",
-            foreignField: "_id",
-            as: "membershipDetails",
-          },
-        },
-        { $unwind: "$membershipDetails" },
-        { $match: { "membershipDetails.tutorId": tutorId } },
-      ]);
-
-      const totalMembershipEnrollments = membershipOrdersAgg.length;
-      const membershipRevenue = membershipOrdersAgg.reduce(
-        (acc, curr) => acc + curr.totalAmount,
-        0
-      );
-
-      const membershipUniqueStudentsSet = new Set(
-        membershipOrdersAgg.map((order) => order.userId.toString())
-      );
-      const membershipUniqueStudents = membershipUniqueStudentsSet.size;
-
-      const totalEnrollments =
-        totalOrderEnrollments + totalMembershipEnrollments;
+      // Total revenue: sum revenue from orders and membership orders
+      const ordersRevenue = orders.reduce((sum, order) => {
+        return sum + parseFloat(order.totalAmount);
+      }, 0);
+      const membershipRevenue = membershipOrders.reduce((sum, mOrder) => {
+        return sum + mOrder.totalAmount;
+      }, 0);
       const totalRevenue = ordersRevenue + membershipRevenue;
-      const ordersUniqueStudentsList: string[] = await OrderS.distinct(
-        "userId",
-        {
-          courseId: { $in: courseIds },
-          orderStatus: "success",
+
+      const studentIdsSet = new Set(orders.map((order) => order.userId));
+      membershipOrders.forEach((mOrder) => {
+        if (mOrder.userId) {
+          studentIdsSet.add(mOrder.userId.toString());
         }
+      });
+      const totalStudents = studentIdsSet.size;
+
+      const studentIds = Array.from(
+        new Set(orders.map((order) => order.userId))
       );
-      const combinedUniqueStudentsSet = new Set([
-        ...ordersUniqueStudentsList.map(String),
-        ...Array.from(membershipUniqueStudentsSet),
-      ]);
-      const totalStudents = combinedUniqueStudentsSet.size;
+      const users = await userSchema.find({ _id: { $in: studentIds } });
 
-      const membershipEnrollmentTrendAgg = await MembershipOrder.aggregate([
-        { $match: { orderStatus: "success" } },
-        {
-          $lookup: {
-            from: "memberships",
-            localField: "membershipId",
-            foreignField: "_id",
-            as: "membershipDetails",
-          },
-        },
-        { $unwind: "$membershipDetails" },
-        { $match: { "membershipDetails.tutorId": tutorId } },
-        {
-          $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-            count: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-      ]);
+      let totalProgress = 0;
+      let enrolledCount = 0;
+      let completedCount = 0;
 
-      const enrollmentTrendMap = new Map<string, number>();
-      for (const trend of orderEnrollmentTrendAgg) {
-        enrollmentTrendMap.set(trend._id, trend.count);
-      }
-      for (const trend of membershipEnrollmentTrendAgg) {
-        enrollmentTrendMap.set(
-          trend._id,
-          (enrollmentTrendMap.get(trend._id) || 0) + trend.count
-        );
-      }
-      const enrollmentTrend = Array.from(enrollmentTrendMap.entries())
-        .map(([date, count]) => ({ _id: date, count }))
-        .sort((a, b) => a._id.localeCompare(b._id));
+      users.forEach((user) => {
+        if (user.courseProgress && Array.isArray(user.courseProgress)) {
+          user.courseProgress.forEach((progressEntry) => {
+            if (courseIds.includes(progressEntry.courseId)) {
+              enrolledCount++;
+              totalProgress += progressEntry.progress;
 
-      const progressAgg = await userSchema.aggregate([
-        { $match: { "courseProgress.courseId": { $in: courseIds } } },
-        { $unwind: "$courseProgress" },
-        { $match: { "courseProgress.courseId": { $in: courseIds } } },
-        {
-          $group: {
-            _id: null,
-            avgProgress: { $avg: "$courseProgress.progress" },
-            totalEnrolled: { $sum: 1 },
-            completedCourses: {
-              $sum: {
-                $cond: [{ $eq: ["$courseProgress.progress", 100] }, 1, 0],
-              },
-            },
-          },
-        },
-      ]);
-      let avgProgress = 0,
-        enrolledCount = 0,
-        completedCount = 0;
-      if (progressAgg && progressAgg.length > 0) {
-        avgProgress = progressAgg[0].avgProgress;
-        enrolledCount = progressAgg[0].totalEnrolled;
-        completedCount = progressAgg[0].completedCourses;
-      }
+              if (
+                progressEntry.progress >= 100 ||
+                (progressEntry.totalChapters > 0 &&
+                  progressEntry.completedChapters.length ===
+                    progressEntry.totalChapters)
+              ) {
+                completedCount++;
+              }
+            }
+          });
+        }
+      });
+
+      const avgProgress = enrolledCount > 0 ? totalProgress / enrolledCount : 0;
       const completionRate =
         enrolledCount > 0 ? (completedCount / enrolledCount) * 100 : 0;
+
+      const enrollmentTrend: { [key: string]: number } = {};
+      const addToTrend = (date: Date) => {
+        const key = `${date.getFullYear()}-${(
+          "0" +
+          (date.getMonth() + 1)
+        ).slice(-2)}-${("0" + date.getDate()).slice(-2)}`;
+        enrollmentTrend[key] = (enrollmentTrend[key] || 0) + 1;
+      };
+
+      orders.forEach((order) => {
+        const date = new Date(order?.createdAt || new Date());
+        addToTrend(date);
+      });
+
+      membershipOrders.forEach((mOrder) => {
+        const date = new Date(mOrder?.createdAt || new Date());
+        addToTrend(date);
+      });
+
       return {
         totalCourses,
         totalEnrollments,
@@ -491,7 +430,7 @@ export class ReportsRepository implements ReportInterface {
         enrollmentTrend,
       };
     } catch (err) {
-      console.log(err);
+      console.error(err);
       return [];
     }
   }

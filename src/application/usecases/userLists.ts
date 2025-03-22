@@ -60,7 +60,7 @@ export class GetAllTutor {
     }
   }
 
-  async execDissAprove(id: string): Promise<Person | null> {
+  async execDissAprove(id: string, reason: string): Promise<Person | null> {
     try {
       const user = await this.userRepository.disapproveTutor(id);
       if (!user) {
@@ -71,6 +71,7 @@ export class GetAllTutor {
       const updatedUser = await this.userRepository.update(id, {
         isTutor: false,
         tutorStatus: "rejected",
+        reason,
       });
       await sendEmail(userEmail, false);
       if (updatedUser?.profile) {

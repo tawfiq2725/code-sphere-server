@@ -20,7 +20,8 @@ export class Person {
     public tutorStatus?: "pending" | "approved" | "rejected",
     public profile?: string,
     public bio?: string,
-    public courseProgress?: CourseProgress[]
+    public courseProgress?: CourseProgress[],
+    public reason?: string
   ) {}
 
   async hashPassword(): Promise<void> {

@@ -1,12 +1,13 @@
-import User from "../../infrastructure/database/userSchema";
+import User, { UserDocument } from "../../infrastructure/database/userSchema";
 import Membership from "../../infrastructure/database/MembershipSchema";
 import Course from "../../infrastructure/database/courseSchema";
 import Chapter from "../../infrastructure/database/chapterSchema";
+import { getUrl } from "../../utils/getUrl";
 
 export const enrollUserInCourse = async (
   userId: string,
   courseId: string
-): Promise<void> => {
+): Promise<UserDocument | null> => {
   try {
     const countChapters = await Chapter.countDocuments({ courseId });
 
@@ -24,6 +25,13 @@ export const enrollUserInCourse = async (
       },
       { new: true }
     );
+    if (!updatedUser) {
+      return null;
+    }
+    if (updatedUser.profile) {
+      updatedUser.profile = await getUrl(updatedUser.profile);
+    }
+    return updatedUser;
   } catch (error) {
     console.error("Error enrolling user in course:", error);
     throw error;

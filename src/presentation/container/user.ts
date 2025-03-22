@@ -7,6 +7,7 @@ import {
   GoogleAuth,
   LoginUser,
   PasswordUsecase,
+  RecentMessageStudents,
   setRole,
 } from "../../application/usecases/loginUser";
 import { FileUploadService } from "../../application/services/filesUpload";
@@ -28,6 +29,7 @@ const googleAuthUsecase = new GoogleAuth(userRepository);
 const setRoleUsecase = new setRole(userRepository);
 const couponUsecase = new createCouponUsecase(couponRepository);
 const tutorUsecase = new getTutorUsecasae(userRepository);
+const messageUsecase = new RecentMessageStudents(userRepository);
 export const userControllerDI = new UserController(
   createUserUseCase,
   loginUseCase,
@@ -36,5 +38,6 @@ export const userControllerDI = new UserController(
   googleAuthUsecase,
   setRoleUsecase,
   couponUsecase,
-  tutorUsecase
+  tutorUsecase,
+  messageUsecase
 );

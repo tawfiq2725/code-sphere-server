@@ -6,6 +6,8 @@ import {
   DeleteCourse,
   ToggleCourseVisibility,
   CreateCourse,
+  addReviewOrder,
+  GetReview,
 } from "../../application/usecases/Course";
 import { getUrl } from "../../utils/getUrl";
 
@@ -18,7 +20,9 @@ export class CourseCtrl {
     private deleteCourse: DeleteCourse,
     private toggleCourse: ToggleCourseVisibility,
     private createCourse: CreateCourse,
-    private fileUplaod: FileUploadService
+    private fileUplaod: FileUploadService,
+    private addorEditReview: addReviewOrder,
+    private getReview: GetReview
   ) {}
 
   public async CourseCreate(req: MulterRequest, res: Response): Promise<void> {
@@ -207,6 +211,77 @@ export class CourseCtrl {
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
         "Server error",
+        false
+      );
+    }
+  }
+  public async addOrderReview(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { rating, description } = req.body;
+    console.log(id, rating, description);
+    try {
+      const data = {
+        id,
+        rating,
+        description,
+      };
+      console.log(data);
+      const result = await this.addorEditReview.execute(data);
+      if (!result) {
+        return;
+      }
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Review added successfully",
+        true,
+        result
+      );
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
+        false
+      );
+    }
+  }
+  public async getReviewById(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const review = await this.getReview.execute(id);
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Review Fetches Perfectly",
+        true,
+        review
+      );
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
+        false
+      );
+    }
+  }
+  public async getReviewByCourseId(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const review = await this.getReview.executeDescription(id);
+      sendResponseJson(
+        res,
+        HttpStatus.OK,
+        "Review Fetches Perfectly",
+        true,
+        review
+      );
+    } catch (err: any) {
+      sendResponseJson(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        err.message,
         false
       );
     }

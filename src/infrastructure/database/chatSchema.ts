@@ -10,6 +10,16 @@ interface IMessage extends Document {
   updatedAt: Date;
 }
 
+export interface Chat {
+  chatId: string;
+  tutorId?: string;
+  tutorName?: string;
+  studentId?: string;
+  studentName?: string;
+  latestMessage: string;
+  latestMessageTime: string;
+}
+
 interface IChat extends Document {
   _id: string;
   tutorId: mongoose.Schema.Types.ObjectId;

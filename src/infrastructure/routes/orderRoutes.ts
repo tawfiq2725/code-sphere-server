@@ -3,6 +3,7 @@ import { verifyToken } from "../../presentation/middleware/auth";
 import { OrderCtrlDI } from "../../presentation/container/order";
 
 const router = express.Router();
+
 router.use(verifyToken(["student", "admin"]));
 router.post("/create-order", OrderCtrlDI.createOrder.bind(OrderCtrlDI));
 router.post("/verify-order", OrderCtrlDI.verifyOrder.bind(OrderCtrlDI));
@@ -20,4 +21,5 @@ router.get(
 );
 router.get("/get-all-orders", OrderCtrlDI.getAllOrders.bind(OrderCtrlDI));
 router.get("/get-all-orders/:id", OrderCtrlDI.getOrderById.bind(OrderCtrlDI));
+
 export default router;

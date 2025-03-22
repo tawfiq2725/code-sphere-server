@@ -77,7 +77,10 @@ router.get(
   "/get-chapter-front/:courseId",
   chapterCtrlDI.getChapter.bind(chapterCtrlDI)
 );
-
+router.get(
+  "/get-recent/tutor/:id",
+  userControllerDI.getRecentChatsTutor.bind(userControllerDI)
+);
 // protected routes
 router.use(verifyToken(["student"]));
 
@@ -124,6 +127,10 @@ router.post(
 router.get(
   "/student/tutor/:id",
   userControllerDI.getTutor.bind(userControllerDI)
+);
+router.get(
+  "/students/get-recent/:id",
+  userControllerDI.getRecentChats.bind(userControllerDI)
 );
 
 export default router;

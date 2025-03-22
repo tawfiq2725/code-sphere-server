@@ -26,6 +26,10 @@ router.get(
   "/get-course/:courseId",
   courseCtrlDI.GetcourseByGenerateId.bind(courseCtrlDI)
 );
+router.get(
+  "/get/review/open/:id",
+  courseCtrlDI.getReviewByCourseId.bind(courseCtrlDI)
+);
 router.use(verifyToken(["admin", "student", "tutor"]));
 
 router.post(
@@ -107,5 +111,7 @@ router.get(
   "/get-category-all/:id",
   categoryCtrlDI.getAllCategoryCheck.bind(categoryCtrlDI)
 );
+router.patch("/review/:id", courseCtrlDI.addOrderReview.bind(courseCtrlDI));
+router.get("/get/review/:id", courseCtrlDI.getReviewById.bind(courseCtrlDI));
 
 export default router;

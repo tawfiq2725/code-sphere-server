@@ -13,6 +13,13 @@ export interface ICourse extends Document {
   courseStatus: "pending" | "approved" | "rejected";
   categoryName: string;
   sellingPrice?: number;
+  review?: {
+    rating?: number;
+    description?: string;
+    hasReview: boolean;
+  };
+  averageRating?: number;
+  reviewCount?: number;
 }
 
 const courseSchema = new Schema<ICourse>(
@@ -68,6 +75,28 @@ const courseSchema = new Schema<ICourse>(
     sellingPrice: {
       type: Number,
       required: false,
+    },
+    review: {
+      rating: {
+        type: Number,
+        default: 0,
+      },
+      description: {
+        type: String,
+        default: "",
+      },
+      hasReview: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
     },
   },
   {

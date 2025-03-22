@@ -3,6 +3,9 @@ import { Course } from "../../domain/entities/Course";
 import { getUrl } from "../../utils/getUrl";
 import { updateUsersWithNewCourse } from "../services/enrollCourse";
 import { FileUploadService } from "../services/filesUpload";
+import { IorderDes } from "../../infrastructure/database/orderSchema";
+import { Review } from "../../domain/entities/Order";
+import { OrderInterface } from "../../domain/interface/Order";
 
 export class CreateCourse {
   constructor(
@@ -230,6 +233,49 @@ export class GetAllCourse {
       } else {
         throw new Error("Invalid Course status");
       }
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+}
+export class addReviewOrder {
+  constructor(private courseRepo: CourseInterface) {}
+  public async execute(data: {
+    id: string;
+    rating: 1 | 2 | 3 | 4 | 5;
+    description: string;
+  }): Promise<Course | null> {
+    try {
+      const orderData = {
+        rating: data.rating,
+        description: data.description,
+        hasReview: true,
+      };
+
+      const review = orderData;
+      const res = await this.courseRepo.updateCourse(data.id, { review });
+      if (res?.courseId)
+        await this.courseRepo.updateCourseReview(res?.courseId);
+      return res;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+}
+export class GetReview {
+  constructor(private courseRepo: CourseInterface) {}
+  public async execute(id: string): Promise<Review> {
+    try {
+      const review = await this.courseRepo.getReviewById(id);
+      return review;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async executeDescription(id: string): Promise<IorderDes[]> {
+    try {
+      const review = await this.courseRepo.getReviewByCourseId(id);
+      return review;
     } catch (err: any) {
       throw new Error(err.message);
     }

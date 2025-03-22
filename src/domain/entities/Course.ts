@@ -12,6 +12,10 @@ export class Course {
     public tutorId: string,
     public courseStatus: "pending" | "approved" | "rejected",
     public categoryName: string,
-    public sellingPrice?: number
+    public sellingPrice?: number,
+    public review?: {
+      rating?: 1 | 2 | 3 | 4 | 5;
+      description?: string;
+    }
   ) {}
 }

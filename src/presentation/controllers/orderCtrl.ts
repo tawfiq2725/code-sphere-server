@@ -112,13 +112,13 @@ export class OrderCtrl {
         };
 
         await this.verifyOrderuse.execute(orderData);
-        await enrollUserInCourse(userId, courseId);
+        const user = await enrollUserInCourse(userId, courseId);
         sendResponseJson(
           res,
           HttpStatus.OK,
           "Payment Success Your Successfully Purchased the Course",
           true,
-          orderId
+          { orderId, user }
         );
       } else {
         sendResponseJson(

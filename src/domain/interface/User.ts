@@ -1,4 +1,6 @@
 import { UserData } from "../../application/usecases/userLists";
+import { Chat } from "../../infrastructure/database/chatSchema";
+import { ICourse } from "../../infrastructure/database/courseSchema";
 import { UserDocument } from "../../infrastructure/database/userSchema";
 import { PaginationOptions } from "../../utils/queryHelper";
 import { Course } from "../entities/Course";
@@ -22,7 +24,9 @@ export interface UserInterface {
   setRole(userId: string, role: string): Promise<Person | null>;
   getTutors(id: string): Promise<Person[]>;
   getUsers(tutorId: string): Promise<Person[]>;
-  myCourses(tutorId: string): Promise<Course[] | null>;
+  myCourses(tutorId: string): Promise<ICourse[] | null>;
   getEnrollStudents(id: string): Promise<UserDocument[] | null>;
   getCertificatesByStudent(id: string): Promise<any>;
+  recentMessage(userId: string): Promise<Chat[]>;
+  recentMessageT(tutorId: string): Promise<Chat[]>;
 }

@@ -8,7 +8,7 @@ export interface CourseProgress {
 }
 
 export interface MembershipInfo {
-  categoryId: string[]; // Ensure this is an array of strings
+  categoryId: string[];
   plan: "Basic" | "Standard" | "Premium";
 }
 
@@ -42,6 +42,7 @@ export interface UserDocument extends Document {
   courseProgress?: CourseProgress[];
   membership?: MembershipInfo;
   CourseCertificate?: UserCertificate[];
+  reason?: string;
 }
 
 const UserSchema: Schema = new Schema(
@@ -140,6 +141,10 @@ const UserSchema: Schema = new Schema(
         },
       ],
       default: [],
+    },
+    reason: {
+      type: String,
+      required: false,
     },
   },
   { timestamps: true }

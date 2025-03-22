@@ -12,6 +12,7 @@ export interface IMembershipOrder extends Document {
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
+  createdAt?: string;
 }
 
 const MembershipOrderSchema = new Schema<IMembershipOrder>(

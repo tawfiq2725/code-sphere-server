@@ -2,8 +2,10 @@ import { UserInterface } from "../../domain/interface/User";
 import { Person } from "../../domain/entities/User";
 import UserModel, { UserDocument } from "../database/userSchema";
 import { PaginationOptions, paginate } from "../../utils/queryHelper";
-import Course, { ICourse } from "../database/courseSchema";
+import CourseS, { ICourse } from "../database/courseSchema";
 import { UserData } from "../../application/usecases/userLists";
+import ChatModel, { Chat } from "../database/chatSchema";
+import { Course } from "../../domain/entities/Course";
 
 export class UserRepository implements UserInterface {
   private maptoEntity(userDoc: UserDocument): Person {
@@ -25,7 +27,8 @@ export class UserRepository implements UserInterface {
       userDoc.tutorStatus,
       userDoc.profile,
       userDoc.bio,
-      userDoc.courseProgress ?? []
+      userDoc.courseProgress ?? [],
+      userDoc.reason
     );
   }
 
@@ -307,7 +310,7 @@ export class UserRepository implements UserInterface {
       const courseIds = student.courseProgress
         ? student.courseProgress.map((item) => item.courseId)
         : [];
-      const courses = await Course.find({ courseId: { $in: courseIds } });
+      const courses = await CourseS.find({ courseId: { $in: courseIds } });
       const tutorIds = courses.map((course) => course.tutorId);
       const uniqueTutorIds = [...new Set(tutorIds)];
       const tutors = await UserModel.find({
@@ -323,7 +326,7 @@ export class UserRepository implements UserInterface {
   }
   public async getUsers(tutorId: string): Promise<Person[]> {
     try {
-      const courses = await Course.find({ tutorId });
+      const courses = await CourseS.find({ tutorId });
 
       if (!courses || courses.length === 0) {
         return [];
@@ -343,7 +346,7 @@ export class UserRepository implements UserInterface {
   }
   public async myCourses(tutorId: string): Promise<ICourse[] | null> {
     try {
-      const courses = await Course.find({ tutorId });
+      const courses = await CourseS.find({ tutorId });
 
       if (!courses || courses.length === 0) {
         return [];
@@ -352,6 +355,75 @@ export class UserRepository implements UserInterface {
     } catch (err) {
       console.log(err);
       return null;
+    }
+  }
+
+  public async recentMessage(userId: string): Promise<Chat[]> {
+    try {
+      const chats = await ChatModel.find({ userId }).populate<{
+        tutorId: UserDocument;
+      }>("tutorId");
+      const result = chats.map((chat) => {
+        let latestMessage = "";
+        let latestMessageTime: string = "";
+
+        if (chat.messages && chat.messages.length > 0) {
+          const sortedMessages = chat.messages.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          const lastMsg = sortedMessages[sortedMessages.length - 1];
+          latestMessage = lastMsg.message || "";
+          latestMessageTime = lastMsg.createdAt
+            ? new Date(lastMsg.createdAt).toISOString()
+            : "";
+        }
+
+        return {
+          chatId: chat._id,
+          tutorId: chat.tutorId?.id,
+          tutorName: chat.tutorId?.name,
+          latestMessage,
+          latestMessageTime,
+        };
+      });
+      return result;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async recentMessageT(tutorId: string): Promise<Chat[]> {
+    try {
+      const chats = await ChatModel.find({ tutorId }).populate<{
+        userId: UserDocument;
+      }>("userId");
+      const result = chats.map((chat) => {
+        let latestMessage = "";
+        let latestMessageTime: string = "";
+
+        if (chat.messages && chat.messages.length > 0) {
+          const sortedMessages = chat.messages.sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          const lastMsg = sortedMessages[sortedMessages.length - 1];
+          latestMessage = lastMsg.message || "";
+          latestMessageTime = lastMsg.createdAt
+            ? new Date(lastMsg.createdAt).toISOString()
+            : "";
+        }
+
+        return {
+          chatId: chat._id,
+          studentId: chat.userId?._id,
+          studentName: chat.userId?.name,
+          latestMessage,
+          latestMessageTime,
+        };
+      });
+      return result;
+    } catch (err: any) {
+      throw new Error(err.message);
     }
   }
 }

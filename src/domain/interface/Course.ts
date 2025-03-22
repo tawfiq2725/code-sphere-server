@@ -1,4 +1,6 @@
+import { IorderDes } from "../../infrastructure/database/orderSchema";
 import { Course } from "../entities/Course";
+import { Review } from "../entities/Order";
 
 export interface CourseInterface {
   create(course: Course): Promise<Course>;
@@ -12,4 +14,7 @@ export interface CourseInterface {
   getAllCoursesAdmin(): Promise<Course[]>;
   findCouresByCategoryId(id: string): Promise<Course[]>;
   getAllCoursesId(id: string): Promise<Course[]>;
+  updateCourseReview(id: string): Promise<Course | null>;
+  getReviewById(id: string): Promise<Review>;
+  getReviewByCourseId(id: string): Promise<IorderDes[]>;
 }
