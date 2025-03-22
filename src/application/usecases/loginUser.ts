@@ -220,9 +220,15 @@ export class getmyCoursesUsecase {
       if (course.thumbnail) {
         course.thumbnail = await getUrl(course.thumbnail);
       }
+      if (course.review?.rating) {
+        course.review.rating = Math.max(
+          1,
+          Math.min(5, Math.round(course.review.rating))
+        ) as 1 | 2 | 3 | 4 | 5;
+      }
     }
 
-    return courses;
+    return courses as Course[];
   }
 }
 
