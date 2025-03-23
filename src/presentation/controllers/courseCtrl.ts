@@ -217,13 +217,15 @@ export class CourseCtrl {
   }
   public async addOrderReview(req: Request, res: Response): Promise<void> {
     const { id } = req.params;
-    const { rating, description } = req.body;
+    const { rating, description, userId } = req.body;
     console.log(id, rating, description);
     try {
       const data = {
-        id,
         rating,
         description,
+        hasReview: true,
+        courseId: id,
+        userId,
       };
       console.log(data);
       const result = await this.addorEditReview.execute(data);

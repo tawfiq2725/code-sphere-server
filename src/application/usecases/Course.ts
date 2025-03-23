@@ -240,20 +240,9 @@ export class GetAllCourse {
 }
 export class addReviewOrder {
   constructor(private courseRepo: CourseInterface) {}
-  public async execute(data: {
-    id: string;
-    rating: 1 | 2 | 3 | 4 | 5;
-    description: string;
-  }): Promise<Course | null> {
+  public async execute(data: Partial<Review>): Promise<Review | null> {
     try {
-      const orderData = {
-        rating: data.rating,
-        description: data.description,
-        hasReview: true,
-      };
-
-      const review = orderData;
-      const res = await this.courseRepo.updateCourse(data.id, { review });
+      const res = await this.courseRepo.addReview(data);
       if (res?.courseId)
         await this.courseRepo.updateCourseReview(res?.courseId);
       return res;
@@ -264,7 +253,7 @@ export class addReviewOrder {
 }
 export class GetReview {
   constructor(private courseRepo: CourseInterface) {}
-  public async execute(id: string): Promise<Review> {
+  public async execute(id: string): Promise<Review | null> {
     try {
       const review = await this.courseRepo.getReviewById(id);
       return review;

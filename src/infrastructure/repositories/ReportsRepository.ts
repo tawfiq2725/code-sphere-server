@@ -330,33 +330,26 @@ export class ReportsRepository implements ReportInterface {
   }
   public async getTutorDashboard(tutorId: string): Promise<any> {
     try {
-      // Fetch tutor's courses that are approved
       const courses = await Course.find({ tutorId, courseStatus: "approved" });
       const totalCourses = courses.length;
       const courseIds = courses.map((course) => course.courseId);
 
-      // Fetch normal course orders
       const orders = await OrderS.find({
         courseId: { $in: courseIds },
         orderStatus: "success",
       });
 
-      // Fetch membership orders
       const membershipOrders = await MembershipOrder.find({
         orderStatus: "success",
       });
 
-      // Total enrollments: sum of normal orders and membership orders
       const totalEnrollments = orders.length + membershipOrders.length;
 
-      // Total revenue: sum revenue from orders and membership orders
       const ordersRevenue = orders.reduce((sum, order) => {
         return sum + parseFloat(order.totalAmount);
       }, 0);
-      const membershipRevenue = membershipOrders.reduce((sum, mOrder) => {
-        return sum + mOrder.totalAmount;
-      }, 0);
-      const totalRevenue = ordersRevenue + membershipRevenue;
+
+      const totalRevenue = ordersRevenue;
 
       const studentIdsSet = new Set(orders.map((order) => order.userId));
       membershipOrders.forEach((mOrder) => {

@@ -15,6 +15,7 @@ export interface CourseInterface {
   findCouresByCategoryId(id: string): Promise<Course[]>;
   getAllCoursesId(id: string): Promise<Course[]>;
   updateCourseReview(id: string): Promise<Course | null>;
-  getReviewById(id: string): Promise<Review>;
+  getReviewById(id: string): Promise<Review | null>;
   getReviewByCourseId(id: string): Promise<IorderDes[]>;
+  addReview(data: Partial<Review>): Promise<Review>;
 }

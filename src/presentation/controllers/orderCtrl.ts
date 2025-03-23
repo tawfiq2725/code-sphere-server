@@ -253,13 +253,13 @@ export class OrderCtrl {
           razorpaySignature: razorpay_signature,
         };
         await this.verifyMembershipUsecase.execute(orderData);
-        await enrollMembership(userId, membershipId, categoryId);
+        const user = await enrollMembership(userId, membershipId, categoryId);
         sendResponseJson(
           res,
           HttpStatus.OK,
           "Payment Success Your Successfully Purchased the Membership",
           true,
-          orderId
+          { orderId, user }
         );
       } else {
         sendResponseJson(

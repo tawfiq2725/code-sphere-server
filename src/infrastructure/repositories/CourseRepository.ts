@@ -3,6 +3,7 @@ import { Course } from "../../domain/entities/Course";
 import CourseS from "../database/courseSchema";
 import Order, { IorderDes } from "../database/orderSchema";
 import { Review } from "../../domain/entities/Order";
+import Rating from "../database/reviewSchema";
 export class CourseRepositoryImpl implements CourseInterface {
   public async create(course: Course): Promise<any> {
     try {
@@ -115,18 +116,17 @@ export class CourseRepositoryImpl implements CourseInterface {
 
   public async updateCourseReview(courseId: string): Promise<Course | null> {
     try {
-      const aggregatedReview = await Order.aggregate([
+      const aggregatedReview = await Rating.aggregate([
         {
           $match: {
             courseId: courseId,
-            orderStatus: "success",
-            "review.rating": { $gt: 0 },
+            rating: { $gt: 0 },
           },
         },
         {
           $group: {
             _id: "$courseId",
-            averageRating: { $avg: "$review.rating" },
+            averageRating: { $avg: "$rating" },
             reviewCount: { $sum: 1 },
           },
         },
@@ -153,36 +153,31 @@ export class CourseRepositoryImpl implements CourseInterface {
       throw new Error(err.message);
     }
   }
-  public async getReviewById(id: string): Promise<Review> {
+  public async getReviewById(id: string): Promise<Review | null> {
     try {
-      const order = await CourseS.findOne({ courseId: id });
-      if (!order?.review) {
-        throw new Error("Review not found");
-      }
-      if (
-        order.review.rating === undefined ||
-        order.review.description === undefined
-      ) {
-        throw new Error("Rating and description are required");
-      }
-      const orderData = {
-        rating: order.review.rating,
-        description: order.review.description,
-        hasReview: order.review.hasReview,
-      };
-      return orderData;
+      const order = await Rating.findOne({ userId: id });
+      if (order) return order.toObject() as Review;
+      return null;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+  public async addReview(data: Partial<Review>): Promise<Review> {
+    try {
+      const review = await Rating.create(data);
+      return review.toObject() as Review;
     } catch (err: any) {
       throw new Error(err.message);
     }
   }
   public async getReviewByCourseId(courseId: string): Promise<IorderDes[]> {
     try {
-      const order = await CourseS.find({ courseId });
+      const order = await Rating.find({ courseId });
       if (!order) {
         throw new Error("Review not found");
       }
       let orderReviews = order.map((_) => ({
-        description: _.review?.description || "",
+        description: _.description || "",
       }));
       return orderReviews;
     } catch (err: any) {

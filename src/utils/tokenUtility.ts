@@ -12,7 +12,7 @@ const refreshTokenSecret =
   process.env.REFRESH_TOKEN_SECRET || "your-refresh-secret";
 
 export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, accessTokenSecret, { expiresIn: "15m" });
+  return jwt.sign(payload, accessTokenSecret, { expiresIn: "1h" });
 }
 
 export function generateRefreshToken(payload: TokenPayload): string {

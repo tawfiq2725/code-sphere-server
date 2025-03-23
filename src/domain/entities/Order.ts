@@ -20,6 +20,9 @@ export class Review {
   constructor(
     public rating: number,
     public description: string,
-    public hasReview: boolean
+    public hasReview: boolean,
+    public courseId: string,
+    public userId: string,
+    public _id?: string
   ) {}
 }

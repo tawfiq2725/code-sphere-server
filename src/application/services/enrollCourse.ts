@@ -42,7 +42,7 @@ export const enrollMembership = async (
   userId: string,
   membershipId: string,
   categoryId: string | string[]
-): Promise<void> => {
+): Promise<UserDocument | null> => {
   try {
     const membership = await Membership.findById(membershipId);
     if (!membership) {
@@ -57,16 +57,13 @@ export const enrollMembership = async (
       throw new Error("User not found");
     }
 
-    // Get existing course IDs that the user is already enrolled in
     const existingCourseIds = user.courseProgress
       ? user.courseProgress.map((course) => course.courseId)
       : [];
 
-    // Only add courses that the user isn't already enrolled in
     const membershipCourses = [];
     for (const course of courses) {
       const courseId = course.courseId;
-      // Check if user is already enrolled in this course
       if (!existingCourseIds.includes(courseId)) {
         const countChapters = await Chapter.countDocuments({ courseId });
         membershipCourses.push({
@@ -92,7 +89,6 @@ export const enrollMembership = async (
       updatedCategories = newCategories;
     }
 
-    // Only update if there are new courses to add
     const updateOperation: any = {
       $set: {
         membership: {
@@ -102,14 +98,16 @@ export const enrollMembership = async (
       },
     };
 
-    // Only add the $addToSet operation if there are new courses
     if (membershipCourses.length > 0) {
       updateOperation.$addToSet = {
         courseProgress: { $each: membershipCourses },
       };
     }
 
-    await User.findByIdAndUpdate(userId, updateOperation, { new: true });
+    const userDoc = await User.findByIdAndUpdate(userId, updateOperation, {
+      new: true,
+    });
+    return userDoc;
   } catch (error) {
     console.error("Error enrolling user in membership:", error);
     throw error;
@@ -123,15 +121,12 @@ export const updateUsersWithNewCourse = async (
       courseId: newCourse.courseId,
     });
 
-    // Find all users who should get this course based on membership
     const usersToUpdate = await User.find({
       "membership.plan": { $in: ["Standard", "Premium"] },
       "membership.categoryId": newCourse.categoryName,
-      // Ensure user doesn't already have this course
       "courseProgress.courseId": { $ne: newCourse.courseId },
     });
 
-    // Update each eligible user
     if (usersToUpdate.length > 0) {
       await User.updateMany(
         {

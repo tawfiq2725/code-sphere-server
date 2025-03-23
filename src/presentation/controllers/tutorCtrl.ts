@@ -37,9 +37,11 @@ export class TutorController {
       }
 
       if (updatedUser.certificates) {
-        for (let certificate of updatedUser.certificates) {
-          certificate = await getUrl(certificate);
-        }
+        updatedUser.certificates = await Promise.all(
+          updatedUser.certificates.map(
+            async (certificate: string) => await getUrl(certificate)
+          )
+        );
       }
 
       sendResponseJson(
