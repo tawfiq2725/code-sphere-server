@@ -153,9 +153,12 @@ export class CourseRepositoryImpl implements CourseInterface {
       throw new Error(err.message);
     }
   }
-  public async getReviewById(id: string): Promise<Review | null> {
+  public async getReviewById(
+    id: string,
+    courseId: string
+  ): Promise<Review | null> {
     try {
-      const order = await Rating.findOne({ userId: id });
+      const order = await Rating.findOne({ userId: id, courseId });
       if (order) return order.toObject() as Review;
       return null;
     } catch (err: any) {

@@ -112,6 +112,9 @@ router.get(
   categoryCtrlDI.getAllCategoryCheck.bind(categoryCtrlDI)
 );
 router.patch("/review/:id", courseCtrlDI.addOrderReview.bind(courseCtrlDI));
-router.get("/get/review/:id", courseCtrlDI.getReviewById.bind(courseCtrlDI));
+router.get(
+  "/get/review/:id/:courseId",
+  courseCtrlDI.getReviewById.bind(courseCtrlDI)
+);
 
 export default router;

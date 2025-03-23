@@ -253,9 +253,9 @@ export class addReviewOrder {
 }
 export class GetReview {
   constructor(private courseRepo: CourseInterface) {}
-  public async execute(id: string): Promise<Review | null> {
+  public async execute(id: string, courseId: string): Promise<Review | null> {
     try {
-      const review = await this.courseRepo.getReviewById(id);
+      const review = await this.courseRepo.getReviewById(id, courseId);
       return review;
     } catch (err: any) {
       throw new Error(err.message);

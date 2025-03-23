@@ -250,8 +250,8 @@ export class CourseCtrl {
   }
   public async getReviewById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
-      const review = await this.getReview.execute(id);
+      const { id, courseId } = req.params;
+      const review = await this.getReview.execute(id, courseId);
       sendResponseJson(
         res,
         HttpStatus.OK,
