@@ -35,34 +35,6 @@ export class createOrderuseCase {
     }
   }
 }
-
-// export class verifyOrderuseCase {
-//   constructor(private orderRepository: OrderInterface) {}
-
-//   public async execute(orderData: Partial<Order>): Promise<any> {
-//     try {
-//       const { orderId } = orderData;
-
-//       if (!orderId) {
-//         throw new Error("Invalid Request");
-//       }
-
-//       const existingOrder = await this.orderRepository.findOrderById(orderId);
-//       if (!existingOrder) {
-//         throw new Error("Order not found");
-//       }
-
-//       const updatedOrder = await this.orderRepository.updateOrder(
-//         orderId,
-//         orderData
-//       );
-
-//       return updatedOrder;
-//     } catch (err: any) {
-//       throw new Error(err.message);
-//     }
-//   }
-// }
 export class verifyOrderUseCase {
   constructor(
     private orderRepository: OrderInterface,

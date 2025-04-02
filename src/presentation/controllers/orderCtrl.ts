@@ -7,7 +7,7 @@ import { OrderRepository } from "../../infrastructure/repositories/OrderReposito
 import {
   createOrderuseCase,
   getOrderByIduseCase,
-  verifyOrderuseCase,
+  verifyOrderUseCase,
 } from "../../application/usecases/CreateOrder";
 import {
   enrollMembership,
@@ -21,7 +21,7 @@ import {
 export class OrderCtrl {
   constructor(
     private createOrderuse: createOrderuseCase,
-    private verifyOrderuse: verifyOrderuseCase,
+    private verifyOrderuse: verifyOrderUseCase,
     private getOrderuse: getOrderByIduseCase,
     private membershipCreateUsecase: MembershipOrderUsecase,
     private verifyMembershipUsecase: verifyOrderMembershipUsecase
