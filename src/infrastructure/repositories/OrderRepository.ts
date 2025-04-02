@@ -1,8 +1,8 @@
-import { Order, Review } from "../../domain/entities/Order";
+import { Order } from "../../domain/entities/Order";
 import { OrderInterface } from "../../domain/interface/Order";
 import Course from "../database/courseSchema";
 import MembershipOrder from "../database/order-mSchema";
-import OrderS, { IorderDes } from "../database/orderSchema";
+import OrderS from "../database/orderSchema";
 export class OrderRepository implements OrderInterface {
   public async create(order: Order): Promise<Order> {
     try {
@@ -72,6 +72,24 @@ export class OrderRepository implements OrderInterface {
     } catch (err) {
       console.log(err);
       return false;
+    }
+  }
+
+  public async findOrderByQuery(query: Partial<Order>): Promise<Order | null> {
+    try {
+      const orderDetails = await OrderS.findOne(query);
+      return orderDetails;
+    } catch (err: any) {
+      throw new Error(err.message);
+    }
+  }
+
+  public async deleteOrderByQuery(query: Partial<Order>): Promise<boolean> {
+    try {
+      const result = await OrderS.deleteMany(query);
+      return result.deletedCount > 0;
+    } catch (err: any) {
+      throw new Error(err.message);
     }
   }
 }

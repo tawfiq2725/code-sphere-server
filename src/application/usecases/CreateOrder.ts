@@ -1,5 +1,6 @@
 import { Order } from "../../domain/entities/Order";
 import { OrderInterface } from "../../domain/interface/Order";
+import { UserInterface } from "../../domain/interface/User";
 
 export class createOrderuseCase {
   constructor(private orderRepository: OrderInterface) {}
@@ -35,13 +36,42 @@ export class createOrderuseCase {
   }
 }
 
-export class verifyOrderuseCase {
-  constructor(private orderRepository: OrderInterface) {}
+// export class verifyOrderuseCase {
+//   constructor(private orderRepository: OrderInterface) {}
 
-  public async execute(orderData: Partial<Order>): Promise<any> {
+//   public async execute(orderData: Partial<Order>): Promise<any> {
+//     try {
+//       const { orderId } = orderData;
+
+//       if (!orderId) {
+//         throw new Error("Invalid Request");
+//       }
+
+//       const existingOrder = await this.orderRepository.findOrderById(orderId);
+//       if (!existingOrder) {
+//         throw new Error("Order not found");
+//       }
+
+//       const updatedOrder = await this.orderRepository.updateOrder(
+//         orderId,
+//         orderData
+//       );
+
+//       return updatedOrder;
+//     } catch (err: any) {
+//       throw new Error(err.message);
+//     }
+//   }
+// }
+export class verifyOrderUseCase {
+  constructor(
+    private orderRepository: OrderInterface,
+    private userRepository: UserInterface
+  ) {}
+
+  public async execute(orderData: Partial<any>): Promise<any> {
     try {
       const { orderId } = orderData;
-
       if (!orderId) {
         throw new Error("Invalid Request");
       }
@@ -49,6 +79,33 @@ export class verifyOrderuseCase {
       const existingOrder = await this.orderRepository.findOrderById(orderId);
       if (!existingOrder) {
         throw new Error("Order not found");
+      }
+
+      const user = await this.userRepository.findById(existingOrder.userId);
+      if (user && user.courseProgress) {
+        const alreadyEnrolled = user.courseProgress.some(
+          (progress: { courseId: string }) =>
+            progress.courseId === existingOrder.courseId
+        );
+        if (alreadyEnrolled) {
+          throw new Error("This course Order already enrolled the course");
+        }
+      }
+
+
+      const successfulOrder = await this.orderRepository.findOrderByQuery({
+        courseId: existingOrder.courseId,
+        userId: existingOrder.userId,
+        orderStatus: "success",
+      });
+
+
+      if (successfulOrder) {
+        await this.orderRepository.deleteOrderByQuery({
+          courseId: existingOrder.courseId,
+          userId: existingOrder.userId,
+          orderStatus: "failed",
+        });
       }
 
       const updatedOrder = await this.orderRepository.updateOrder(

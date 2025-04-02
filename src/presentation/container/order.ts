@@ -1,7 +1,7 @@
 import { MembershipOrderRepository } from "../../infrastructure/repositories/MembershipOrder";
 import { OrderRepository } from "../../infrastructure/repositories/OrderRepository";
 import { createOrderuseCase } from "../../application/usecases/CreateOrder";
-import { verifyOrderuseCase } from "../../application/usecases/CreateOrder";
+import { verifyOrderUseCase } from "../../application/usecases/CreateOrder";
 import { getOrderByIduseCase } from "../../application/usecases/CreateOrder";
 import { MembershipOrderUsecase } from "../../application/usecases/MembershipUsecase";
 import { verifyOrderMembershipUsecase } from "../../application/usecases/MembershipUsecase";
@@ -14,7 +14,7 @@ const courseRepo = new CourseRepositoryImpl();
 const userRepo = new UserRepository();
 const membershipOrderRepo = new MembershipOrderRepository();
 const createOrderuse = new createOrderuseCase(orderRepo);
-const verifyOrderuse = new verifyOrderuseCase(orderRepo);
+const verifyOrderuse = new verifyOrderUseCase(orderRepo, userRepo);
 const getOrderuse = new getOrderByIduseCase(orderRepo);
 const membershipUse = new MembershipOrderUsecase(
   membershipOrderRepo,

@@ -1,5 +1,5 @@
-import { IorderDes } from "../../infrastructure/database/orderSchema";
-import { Order, Review } from "../entities/Order";
+import { IOrder } from "../../infrastructure/database/orderSchema";
+import { Order } from "../entities/Order";
 
 export interface OrderInterface {
   create(order: Order): Promise<Order>;
@@ -10,4 +10,6 @@ export interface OrderInterface {
   getOrderByUserId(
     id: string
   ): Promise<{ orders: any[]; membershipOrders: any[] } | null>;
+  findOrderByQuery(order: Partial<Order>): Promise<Order | null>;
+  deleteOrderByQuery(order: Partial<Order>): Promise<boolean>;
 }
