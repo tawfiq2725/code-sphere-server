@@ -13,6 +13,9 @@ import courseRoutes from "./infrastructure/routes/courseRoutes";
 import reportRoutes from "./infrastructure/routes/reportsRoute";
 import { configFrontend } from "./config/ConfigSetup";
 import { initSocket } from "./config/socketConfig";
+import fs from "fs";
+import * as rfs from "rotating-file-stream";
+import path from "path";
 config();
 const PORT = process.env.APP_PORT || 4000;
 
@@ -45,12 +48,26 @@ const corsOptions = {
 const app = express();
 const server = createServer(app);
 const io = initSocket(server);
+const logDirectory = path.join(__dirname, `logs`);
+if (!fs.existsSync(logDirectory)) {
+  fs.mkdirSync(logDirectory);
+}
+const errorLogstream = rfs.createStream("error.log", {
+  interval: `1d`,
+  path: logDirectory,
+  maxFiles: 7,
+});
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 app.use(cookieParser());
-app.use(logger("dev"));
+app.use(
+  logger("combined", {
+    stream: errorLogstream,
+    skip: (req: Request, res: Response) => res.statusCode < 400,
+  })
+);
 
 app.use("/api/reports", reportRoutes);
 app.use("/api/order", orderRoutes);
