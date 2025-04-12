@@ -1,3 +1,5 @@
 ::1 - - [07/Apr/2025:09:08:17 +0000] "GET /get-profile?email=ganesh%40yopmail.com HTTP/1.1" 401 54 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 ::1 - - [07/Apr/2025:09:08:17 +0000] "GET /student/tutor/67ed2b202681505c81fd73ce HTTP/1.1" 401 54 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 ::1 - - [07/Apr/2025:09:08:18 +0000] "GET /student/tutor/67ed2b202681505c81fd73ce HTTP/1.1" 401 54 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+::1 - - [12/Apr/2025:12:13:53 +0000] "GET /api/course/get-coupons HTTP/1.1" 401 54 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+::1 - - [12/Apr/2025:14:58:17 +0000] "GET /api/course/get-coupons HTTP/1.1" 401 54 "http://localhost:3000/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"

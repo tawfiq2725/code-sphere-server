@@ -3,6 +3,8 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from "crypto";
 import { Readable } from "stream";
+import { config } from "dotenv";
+config();
 
 export class AwsConfig {
   private bucketName: string;
