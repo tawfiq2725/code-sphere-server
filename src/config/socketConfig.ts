@@ -118,6 +118,44 @@ export const initSocket = (server: HttpServer): SocketIOServer => {
       }
     });
 
+    socket.on("message:delete", async (data) => {
+      try {
+        const { chatId, messageId, sender } = data;
+        const chat = await ChatModel.findById(chatId);
+        if (!chat) {
+          socket.emit("message:error", { error: "Chat not found" });
+          return;
+        }
+
+        const message = chat.messages.find(
+          (msg: any) => msg._id.toString() === messageId
+        );
+        if (!message) {
+          socket.emit("message:error", { error: "Message not found" });
+          return;
+        }
+
+        if (message.sender !== sender) {
+          socket.emit("message:error", {
+            error: "You can only delete your own messages",
+          });
+          return;
+        }
+
+        message.deleted = true;
+        await chat.save();
+
+        io.to(chatId).emit("message:updated", {
+          messageId,
+          deleted: true,
+        });
+      } catch (error) {
+        console.error("Error deleting message:", error);
+        socket.emit("message:error", { error: "Failed to delete message" });
+      }
+    });
+
+
     // Handle disconnection
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
